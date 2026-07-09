@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.pytest_cache/
+venv/
+.venv/
+
+# Large binary intermediates (regenerable from data/raw)
+data/processed/*.pkl
+data/processed/*.parquet
+
+# OS
+.DS_Store
+
+# Notebooks checkpoints
+.ipynb_checkpoints/

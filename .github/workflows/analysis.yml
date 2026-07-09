@@ -1,0 +1,41 @@
+name: weekly-analysis
+
+# Runs the full pipeline whenever new measurement data lands in data/raw/
+# (or the analysis code changes), then commits refreshed results back to the
+# repo so the supervisor always sees current numbers in results/SUMMARY.md.
+
+on:
+  push:
+    paths:
+      - "data/raw/**"
+      - "data/legacy/**"
+      - "src/**"
+      - "run_analysis.py"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: analysis-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  analyse:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Run tests first (never publish results from broken code)
+        run: pytest -q
+      - name: Run analysis pipeline
+        run: python run_analysis.py --raw data/raw --out results
+      - name: Commit refreshed results
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "auto: refresh analysis results [skip ci]"
+          file_pattern: "results/**"
