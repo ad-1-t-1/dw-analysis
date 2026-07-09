@@ -237,10 +237,19 @@ def energy_balance(df: pd.DataFrame) -> dict:
         q_hyd, _ = integrate_rate(df["Q_reg_W"].clip(lower=0))
         out["Q_reg_hydronic_kWh"] = q_hyd / 3.6e6
     if "Q_reg_air_W" in df.columns:
-        q_air, _ = integrate_rate(df["Q_reg_air_W"].clip(lower=0))
-        out["Q_reg_air_kWh"] = q_air / 3.6e6
-        if out.get("Q_reg_hydronic_kWh", 0) > 0:
-            out["closure"] = out["Q_reg_air_kWh"] / out["Q_reg_hydronic_kWh"]
+        # closure is only meaningful over the window where BOTH sides are
+        # measured (air-side flow may cover a fraction of the season)
+        both = df["Q_reg_W"].notna() & df["Q_reg_air_W"].notna()
+        if both.any():
+            q_air, _ = integrate_rate(df.loc[both, "Q_reg_air_W"].clip(lower=0))
+            q_hyd_w, _ = integrate_rate(df.loc[both, "Q_reg_W"].clip(lower=0))
+            out["Q_reg_air_kWh_window"] = q_air / 3.6e6
+            out["Q_reg_hydronic_kWh_window"] = q_hyd_w / 3.6e6
+            out["closure_window_hours"] = round(
+                both.sum() * pd.Timedelta(config.RESAMPLE_RULE
+                                          ).total_seconds() / 3600.0, 1)
+            if q_hyd_w > 0:
+                out["closure"] = q_air / q_hyd_w
     else:
         out["closure_note"] = ("regeneration air flow (ch 120) unavailable — "
                                "air-side balance not computable")

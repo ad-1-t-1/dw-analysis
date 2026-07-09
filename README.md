@@ -66,12 +66,15 @@ the hydronic circuits are temperature-dependent (IAPWS-97).
 
 | # | Issue | Impact until resolved |
 |---|---|---|
-| 1 | Voltage→physical coefficients for ch 117/118/120/122 (were in `merge.py`) → enter in `src/dw_analysis/config.py: VOLTAGE_CONVERSIONS` | pre-trace-24 flow channels unusable; flow KPIs limited |
+| 1 | ~~Voltage→physical coefficients for ch 117/118/120/122~~ **resolved** — taken from `merge.py` (ch117 identity 0–10 V = 0–10 m/s; ch118 = 9·U − 20 °C; ch120 = 500·U − 200 old range; ch122 = 187500·I − 750 old range) | — |
 | 2 | Duct area at velocity sensor ch 117 → `config.PROC_DUCT_AREA_M2` | process air mass flow, water removed, COP not computable from measurement |
-| 3 | Units of ch 120 (assumed m³/h) → `config.V_DOT_REG_UNITS` | regen air-side balance may be off by 3600× if wrong |
+| 3 | Units of ch 120 (assumed m³/h; measured values ≈ 75–83 in Trace 21 window) → `config.V_DOT_REG_UNITS` | air-side balance scales directly with this |
 | 4 | Flow-meter position in circuit III (supply or return?) | ~1 % systematic on Q_reg |
 | 5 | Site pressure (assumed 101.325 kPa; Kassel ≈ 98.6 kPa) → `config.P_ATM` | humidity ratios ~2.7 % systematic |
 | 6 | Is there any non-solar heat source feeding the regeneration coil? | solar fraction currently 1.0 by system boundary |
+| 7 | Energy-balance closure over the first air-flow window (3.2 h, Trace 21) is only **0.14** — air stream picks up ~14 % of the hydronic heat input. Candidates: ch 120 units/range, HX losses, wheel not rotating during that (overnight) window, or T_reg_nach_HX not representative at low flow | air-side balance untrustworthy until explained |
+| 8 | `P_el` is 0.0 throughout the dataset — electrical power channel not delivering | E_el and electric COP unavailable |
+| 9 | Channel `111 (Vdc)` appears in Trace files but has no known meaning/conversion | column kept raw, unused |
 
 ## Roadmap (effort → value)
 

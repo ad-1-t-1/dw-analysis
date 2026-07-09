@@ -12,10 +12,18 @@ from dw_analysis import config, ingest, quality
 DAQ_CSV = textwrap.dedent("""\
     metadata line 1
     metadata line 2
-    Scan Sweep Time,Scan Number,102 (°C)- T_reg_in,106 (°C)- T_proc_in,117 (Vdc)- u_proc_out
-    2026-06-01 12:00:00.000,1,22.5,26.1,2.5
-    2026-06-01 12:02:00.000,2,22.7,26.0,2.6
-    2026-06-01 12:04:00.000,3,-40.0,25.9,2.4
+    Scan Sweep Time,Scan Number,102 (°C)- T_reg_in,106 (°C)- T_proc_in,117 (Vdc),118 (Vdc),120 (Vdc),122 (Adc)
+    2026-06-01 12:00:00.000,1,22.5,26.1,2.5,5.0,1.0,0.008
+    2026-06-01 12:02:00.000,2,22.7,26.0,2.6,5.1,1.1,0.008
+    2026-06-01 12:04:00.000,3,-40.0,25.9,2.4,5.2,1.2,0.008
+    """)
+
+DAQ_CSV_POST24 = textwrap.dedent("""\
+    metadata line 1
+    metadata line 2
+    Scan Sweep Time,Scan Number,102 (°C)- T_reg_in,117 (Vdc)- u_proc_out
+    2026-06-01 12:00:00.000,1,22.5,2.5
+    2026-06-01 12:02:00.000,2,22.7,2.6
     """)
 
 
@@ -31,24 +39,34 @@ def test_trace_number_parsing():
     assert ingest.trace_number("something.csv") is None
 
 
-def test_daq_loader_and_unconverted_voltage_warns(tmp_path):
+def test_pre_trace24_conversions_applied(tmp_path):
+    # coefficients from merge.py:
+    # ch117 identity; ch118 = 9U−20; ch120 = 500U−200; ch122 = 187500·I−750
     f = _write(tmp_path, "Trace 23.csv", DAQ_CSV)
+    df = ingest.load_daq_trace(f)
+    assert len(df) == 3
+    assert df["u_proc_out"].iloc[0] == pytest.approx(2.5)          # 1·2.5
+    assert df["T_proc_out_Vol"].iloc[0] == pytest.approx(25.0)     # 9·5−20
+    assert df["V_dot_reg"].iloc[0] == pytest.approx(300.0)         # 500·1−200
+    assert df["V_dot_II"].iloc[0] == pytest.approx(750.0)          # 187500·0.008−750
+    assert "117 (Vdc)" not in df.columns                           # raw dropped
+
+
+def test_post_cutoff_not_double_converted(tmp_path):
+    f = _write(tmp_path, "Trace 24.csv", DAQ_CSV_POST24)
+    df = ingest.load_daq_trace(f)
+    # logger already converted → alias column arrives named, value untouched
+    assert df["u_proc_out"].iloc[0] == pytest.approx(2.5)
+
+
+def test_post_cutoff_with_raw_columns_warns(tmp_path):
+    # a trace ≥ 24 should never contain raw '117 (Vdc)' columns; if it does,
+    # warn loudly instead of silently guessing
+    f = _write(tmp_path, "Trace 25.csv", DAQ_CSV)
     with warnings.catch_warnings(record=True) as w:
         warnings.simplefilter("always")
-        df = ingest.load_daq_trace(f)
-    assert len(df) == 3
-    assert "T_reg_in" in df.columns
-    # trace 23 < cutoff and no coefficients → renamed, warned
-    assert "u_proc_out_raw_V" in df.columns
-    assert any("u_proc_out" in str(x.message) for x in w)
-
-
-def test_daq_loader_post_cutoff_no_conversion(tmp_path):
-    f = _write(tmp_path, "Trace 24.csv", DAQ_CSV)
-    df = ingest.load_daq_trace(f)
-    # logger already converted → column kept as-is
-    assert "u_proc_out" in df.columns
-    assert df["u_proc_out"].iloc[0] == pytest.approx(2.5)
+        ingest.load_daq_trace(f)
+    assert any("check logger config" in str(x.message) for x in w)
 
 
 def test_artefact_filter():

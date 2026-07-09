@@ -8,7 +8,7 @@
 | start | 2026-06-10 11:20:00+02:00 |
 | end | 2026-07-02 15:18:00+02:00 |
 | artefact_rows_masked | 8206 |
-| plausibility_flags | 15489 |
+| plausibility_flags | 15668 |
 | coverage_T_proc_in | 0.091 |
 | coverage_T_reg_nach_HX | 0.946 |
 | coverage_V_dot_III | 0.076 |
@@ -21,7 +21,7 @@
 | Q_reg_coverage | 0.075 |
 | E_el_kWh | 0.000 |
 
-_Air-flow sources: process = None, regeneration = None._
+_Air-flow sources: process = None, regeneration = measured (m3/h assumed)._
 
 ## Solar contribution
 
@@ -36,7 +36,10 @@ _Air-flow sources: process = None, regeneration = None._
 | Quantity | Value |
 |---|---|
 | Q_reg_hydronic_kWh | 68.333 |
-| closure_note | regeneration air flow (ch 120) unavailable — air-side balance not computable |
+| Q_reg_air_kWh_window | 1.229 |
+| Q_reg_hydronic_kWh_window | 8.821 |
+| closure_window_hours | 3.200 |
+| closure | 0.139 |
 
 ## KPIs by regeneration temperature bin
 

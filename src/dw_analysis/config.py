@@ -48,19 +48,22 @@ V_DOT_REG_UNITS = "m3/h"
 # itself and applying it again would corrupt the data.
 TRACE_CONVERSION_CUTOFF = 24
 
-# Linear conversions  physical = scale * volts + offset.
-# COEFFICIENTS UNKNOWN — they lived in merge.py, which is not in this repo.
-# Until they are entered, pre-cutoff voltage channels are kept as
-# "<name>_raw_V" and a warning is raised.  >>> FILL THESE IN <<<
+# Linear conversions  physical = scale * signal + offset, applied to the RAW
+# column names as they appear in pre-cutoff Trace files.
+# Source: merge.py (original merge script), verified against Trace 21 header.
+# NOTE: ch 120/122 have DIFFERENT ranges in the logger from trace 24 onwards
+# (120: 125*U − 50; 122: 62500*I − 250) — the logger applies those itself, so
+# they never appear in this software-side table.
 VOLTAGE_CONVERSIONS: dict[str, dict] = {
-    # channel 117: process air velocity after DW [m/s]
-    "u_proc_out":     {"scale": None, "offset": None, "units": "m/s"},
-    # channel 118: process air temperature at velocity sensor [°C]
-    "T_proc_out_Vol": {"scale": None, "offset": None, "units": "degC"},
-    # channel 120: regeneration air volume flow (units per V_DOT_REG_UNITS)
-    "V_dot_reg":      {"scale": None, "offset": None, "units": V_DOT_REG_UNITS},
-    # channel 122: water flow, discharge circuit II
-    "V_dot_II":       {"scale": None, "offset": None, "units": "L/s"},
+    # raw col      alias            physical = scale*signal + offset
+    "117 (Vdc)": {"name": "u_proc_out", "scale": 1.0, "offset": 0.0,
+                  "units": "m/s"},   # 0–10 V == 0–10 m/s (identity)
+    "118 (Vdc)": {"name": "T_proc_out_Vol", "scale": 9.0, "offset": -20.0,
+                  "units": "degC"},  # temperature inside velocity sensor
+    "120 (Vdc)": {"name": "V_dot_reg", "scale": 500.0, "offset": -200.0,
+                  "units": V_DOT_REG_UNITS},  # OLD range (pre-trace-24)
+    "122 (Adc)": {"name": "V_dot_II", "scale": 187500.0, "offset": -750.0,
+                  "units": "L/h?"},  # OLD range; units unverified
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
@@ -136,4 +139,12 @@ COLUMN_MAP = {
     "solar_Dig2_Pumpe_II":               "Pumpe_II",
     "solar_Dig3_Pumpe_III":              "Pumpe_III",
     "solar_Dig5_Anforderung_Entfeuchter": "Anforderung_DW",
+
+    # names as they come out of ingest.load_solar_uvr on raw UVR exports
+    # (label suffixes that differ from the plain aliases above)
+    "solar_T_reg_nach_HX_(TIBT851)":     "T_reg_nach_HX",
+    "solar_T_reg_(TICBT103)":            "T_reg_TICBT103",
+    "solar_PWM Pumpe_I":                 "PWM_Pumpe_I",
+    "solar_Anforderung_Entfeuchter":     "Anforderung_DW",
+    "solar_Stoerung_Entfeuchter":        "Stoerung",
 }

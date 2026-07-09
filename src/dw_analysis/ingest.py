@@ -34,32 +34,31 @@ def trace_number(filepath: str | Path) -> int | None:
 
 def _apply_voltage_conversions(df: pd.DataFrame, n_trace: int | None,
                                fname: str) -> pd.DataFrame:
-    """Convert raw-voltage channels (ch 117/118/120/122) to physical units.
+    """Convert raw V/A channels (ch 117/118/120/122) to physical units.
 
-    Logger behaviour (verified on plant):
-      trace  < TRACE_CONVERSION_CUTOFF (24): logger stored raw volts
-                                             → convert here.
-      trace >= cutoff:                       logger already converted
-                                             → do NOT convert again.
-    Unknown trace number → treated as pre-cutoff and warned, so silent
+    Logger behaviour (from merge.py, verified against Trace 21 header):
+      trace  < TRACE_CONVERSION_CUTOFF (24): logger stored raw signals in
+        columns named '117 (Vdc)', '118 (Vdc)', '120 (Vdc)', '122 (Adc)'
+        → convert here (physical = scale*signal + offset) and rename.
+      trace >= cutoff: logger already converted (and with NEW ranges for
+        ch 120/122) → columns arrive with alias names; do NOT touch them.
+    Unknown trace number: warn; convert only if raw-named columns present
+    (their presence itself indicates an unconverted file), so silent
     double-conversion is impossible.
     """
+    raw_cols = [c for c in config.VOLTAGE_CONVERSIONS if c in df.columns]
     if n_trace is not None and n_trace >= config.TRACE_CONVERSION_CUTOFF:
-        return df  # already physical units
-
-    for col, conv in config.VOLTAGE_CONVERSIONS.items():
-        if col not in df.columns:
-            continue
-        if conv["scale"] is None:
-            warnings.warn(
-                f"{fname}: channel '{col}' is raw volts (trace "
-                f"{n_trace}) but no conversion coefficients are set in "
-                f"config.VOLTAGE_CONVERSIONS — column renamed to "
-                f"'{col}_raw_V' and excluded from KPIs."
-            )
-            df = df.rename(columns={col: f"{col}_raw_V"})
-        else:
-            df[col] = conv["scale"] * df[col] + conv["offset"]
+        if raw_cols:
+            warnings.warn(f"{fname}: trace {n_trace} >= cutoff but raw "
+                          f"columns {raw_cols} present — check logger config.")
+        return df
+    if n_trace is None and raw_cols:
+        warnings.warn(f"{fname}: no trace number in filename; raw columns "
+                      f"{raw_cols} found → converting as pre-trace-24.")
+    for raw_col in raw_cols:
+        conv = config.VOLTAGE_CONVERSIONS[raw_col]
+        df[conv["name"]] = conv["scale"] * df[raw_col] + conv["offset"]
+        df = df.drop(columns=[raw_col])
     return df
 
 
@@ -122,6 +121,11 @@ def load_solar_uvr(filepath: str | Path) -> pd.DataFrame:
                                                         "Stoerung").strip()
 
     raw.columns = [clean(c) for c in raw.columns]
+    if raw.columns.duplicated().any():
+        dups = raw.columns[raw.columns.duplicated()].unique().tolist()
+        warnings.warn(f"{Path(filepath).name}: duplicate column names after "
+                      f"cleaning {dups} — keeping first occurrence.")
+        raw = raw.loc[:, ~raw.columns.duplicated()]
     return raw.apply(pd.to_numeric, errors="coerce").sort_index()
 
 
@@ -219,7 +223,18 @@ def apply_column_map(df: pd.DataFrame) -> pd.DataFrame:
             if col.startswith(prefix) and col[len(prefix):] in set(
                     config.COLUMN_MAP.values()):
                 rename[col] = col[len(prefix):]
-    return df.rename(columns=rename)
+    df = df.rename(columns=rename)
+    # legacy pickle and raw-built frames may map DIFFERENT raw names onto the
+    # same alias (e.g. 'solar_Ana1_T_Kollektor' and 'solar_T_Kollektor') —
+    # coalesce duplicates, first non-null value wins per timestamp
+    if df.columns.duplicated().any():
+        out = {}
+        for name in dict.fromkeys(df.columns):
+            sub = df.loc[:, df.columns == name]
+            out[name] = (sub.iloc[:, 0] if sub.shape[1] == 1
+                         else sub.bfill(axis=1).iloc[:, 0])
+        df = pd.DataFrame(out, index=df.index)
+    return df
 
 
 def load_merged_pkl(pkl_path: str | Path) -> pd.DataFrame:
@@ -228,4 +243,8 @@ def load_merged_pkl(pkl_path: str | Path) -> pd.DataFrame:
     df.index.name = "timestamp"
     if df.index.tz is None:
         df = _localize(df)
+    else:
+        # historical pickle stored a fixed UTC+02:00 offset; normalise to the
+        # named zone so it concatenates cleanly with newly ingested data
+        df.index = df.index.tz_convert(config.TZ)
     return df
