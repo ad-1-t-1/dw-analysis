@@ -7,18 +7,18 @@
 | rows | 15960 |
 | start | 2026-06-10 11:20:00+02:00 |
 | end | 2026-07-02 15:18:00+02:00 |
-| artefact_rows_masked | 8206 |
+| artefact_rows_masked | 16411 |
 | plausibility_flags | 15668 |
-| coverage_T_proc_in | 0.091 |
+| coverage_T_proc_in | 0.605 |
 | coverage_T_reg_nach_HX | 0.946 |
-| coverage_V_dot_III | 0.076 |
+| coverage_V_dot_III | 0.569 |
 
 ## Season / period totals
 
 | Quantity | Value |
 |---|---|
-| Q_reg_kWh | 68.333 |
-| Q_reg_coverage | 0.075 |
+| Q_reg_kWh | 660.185 |
+| Q_reg_coverage | 0.572 |
 | E_el_kWh | 0.000 |
 
 _Air-flow sources: process = None, regeneration = measured (m3/h assumed)._
@@ -35,7 +35,7 @@ _Air-flow sources: process = None, regeneration = measured (m3/h assumed)._
 
 | Quantity | Value |
 |---|---|
-| Q_reg_hydronic_kWh | 68.333 |
+| Q_reg_hydronic_kWh | 660.185 |
 | Q_reg_air_kWh_window | 1.229 |
 | Q_reg_hydronic_kWh_window | 8.821 |
 | closure_window_hours | 3.200 |
@@ -45,12 +45,12 @@ _Air-flow sources: process = None, regeneration = measured (m3/h assumed)._
 
 | T_reg_bin   |   hours |   Delta_x_mean_gkg |   eta_deh_mean |   Q_reg_kWh |   Q_reg_coverage |   E_el_kWh |
 |:------------|--------:|-------------------:|---------------:|------------:|-----------------:|-----------:|
-| (30, 35]    |  32.300 |              0.880 |          0.138 |      21.400 |            0.026 |      0.000 |
-| (35, 40]    |  81.133 |              1.314 |          0.213 |       0.000 |            0.000 |      0.000 |
-| (40, 45]    |  94.000 |              2.463 |          0.421 |       7.528 |            0.010 |      0.000 |
-| (45, 50]    |  82.167 |              3.087 |          0.486 |       5.584 |            0.007 |      0.000 |
-| (50, 55]    |  39.867 |            nan     |        nan     |       0.000 |            0.000 |      0.000 |
-| (55, 60]    |  20.500 |            nan     |        nan     |       0.000 |            0.000 |      0.000 |
+| (30, 35]    |  32.300 |              0.832 |          0.132 |      22.475 |            0.027 |      0.000 |
+| (35, 40]    |  81.133 |              0.977 |          0.166 |      79.431 |            0.080 |      0.000 |
+| (40, 45]    |  94.000 |              1.310 |          0.222 |     155.991 |            0.222 |      0.000 |
+| (45, 50]    |  82.167 |              1.422 |          0.239 |     184.711 |            0.239 |      0.000 |
+| (50, 55]    |  39.867 |              1.570 |          0.266 |      95.270 |            0.174 |      0.000 |
+| (55, 60]    |  20.500 |              1.786 |          0.303 |      50.331 |            0.261 |      0.000 |
 
 ## Daily summary
 
@@ -63,19 +63,19 @@ _Air-flow sources: process = None, regeneration = measured (m3/h assumed)._
 | 2026-06-14 00:00:00+02:00 |       0     |            0     |          0 |          nan     |            nan     |           21.525 |                 nan     |      15.032 |           51.668 |       4.533 |              nan | nan                                                                                                           |                                nan     |
 | 2026-06-15 00:00:00+02:00 |       5.592 |            0.103 |          0 |          nan     |            nan     |           21.707 |                 nan     |      14.449 |           49.733 |      13.733 |                1 | no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil) |                                  0     |
 | 2026-06-16 00:00:00+02:00 |      25.947 |            0.636 |          0 |           16.966 |             52.668 |           25.808 |                   0.388 |      17.111 |           42.031 |      24     |                1 | no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil) |                                  0.103 |
-| 2026-06-17 00:00:00+02:00 |      23.051 |            0.668 |          0 |           17.456 |             51.215 |           28.526 |                   0.631 |      19.734 |           39.35  |      17.1   |                1 | no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil) |                                  0.146 |
-| 2026-06-18 00:00:00+02:00 |       0     |            0     |          0 |          nan     |            nan     |           42.734 |                 nan     |      27.404 |           60.392 |       7     |              nan | nan                                                                                                           |                                nan     |
-| 2026-06-19 00:00:00+02:00 |       0     |            0     |          0 |          nan     |            nan     |           42.295 |                 nan     |      26.075 |           58.031 |      24     |              nan | nan                                                                                                           |                                nan     |
-| 2026-06-20 00:00:00+02:00 |       0     |            0     |          0 |          nan     |            nan     |           43.272 |                 nan     |      26.426 |           60.922 |      24     |              nan | nan                                                                                                           |                                nan     |
-| 2026-06-21 00:00:00+02:00 |       0     |            0     |          0 |          nan     |            nan     |           42.303 |                 nan     |      25.205 |           56.326 |      24     |              nan | nan                                                                                                           |                                nan     |
-| 2026-06-22 00:00:00+02:00 |       0     |            0     |          0 |          nan     |            nan     |           43.406 |                 nan     |      25.631 |           57.259 |      22.133 |              nan | nan                                                                                                           |                                nan     |
-| 2026-06-23 00:00:00+02:00 |       0     |            0     |          0 |          nan     |            nan     |           44.355 |                 nan     |      25.809 |           60.851 |      22.433 |              nan | nan                                                                                                           |                                nan     |
-| 2026-06-24 00:00:00+02:00 |       0     |            0     |          0 |          nan     |            nan     |           46.301 |                 nan     |      27.308 |           62.528 |      24     |              nan | nan                                                                                                           |                                nan     |
-| 2026-06-25 00:00:00+02:00 |       0     |            0     |          0 |          nan     |            nan     |           49.462 |                 nan     |      28.789 |           69.068 |      24     |              nan | nan                                                                                                           |                                nan     |
-| 2026-06-26 00:00:00+02:00 |       0     |            0     |          0 |          nan     |            nan     |           50.454 |                 nan     |      29.692 |           78.493 |      24     |              nan | nan                                                                                                           |                                nan     |
-| 2026-06-27 00:00:00+02:00 |       0     |            0     |          0 |          nan     |            nan     |           50     |                 nan     |      31.677 |           71.409 |      24     |              nan | nan                                                                                                           |                                nan     |
-| 2026-06-28 00:00:00+02:00 |       0     |            0     |          0 |          nan     |            nan     |           48.829 |                 nan     |      30.095 |           67.69  |      24     |              nan | nan                                                                                                           |                                nan     |
-| 2026-06-29 00:00:00+02:00 |       0     |            0     |          0 |          nan     |            nan     |           41.931 |                 nan     |      24.485 |           60.786 |      24     |              nan | nan                                                                                                           |                                nan     |
+| 2026-06-17 00:00:00+02:00 |      24.827 |            0.709 |          0 |           17.595 |             50.296 |           28.526 |                   0.628 |      19.734 |           39.35  |      17.1   |                1 | no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil) |                                  0.146 |
+| 2026-06-18 00:00:00+02:00 |      25.255 |            0.588 |          0 |           20.02  |             39.994 |           42.734 |                   0.953 |      27.404 |           60.392 |       7     |                1 | no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil) |                                  0     |
+| 2026-06-19 00:00:00+02:00 |      55.497 |            0.99  |          0 |           22.043 |             35.606 |           42.295 |                   1.075 |      26.075 |           58.031 |      24     |                1 | no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil) |                                  0.247 |
+| 2026-06-20 00:00:00+02:00 |      57.5   |            0.968 |          0 |           23.085 |             33.521 |           43.272 |                   1.087 |      26.426 |           60.922 |      24     |                1 | no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil) |                                  0.174 |
+| 2026-06-21 00:00:00+02:00 |      54.864 |            0.983 |          0 |           23.302 |             33.025 |           42.303 |                   1.224 |      25.205 |           56.326 |      24     |                1 | no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil) |                                  0.208 |
+| 2026-06-22 00:00:00+02:00 |      47.735 |            0.897 |          0 |           23.634 |             32.398 |           43.406 |                   1.261 |      25.631 |           57.259 |      22.133 |                1 | no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil) |                                  0.236 |
+| 2026-06-23 00:00:00+02:00 |      53.673 |            0.964 |          0 |           23.892 |             31.893 |           44.355 |                   1.161 |      25.809 |           60.851 |      22.433 |                1 | no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil) |                                  0.25  |
+| 2026-06-24 00:00:00+02:00 |      56.774 |            0.994 |          0 |           24.325 |             31.096 |           46.301 |                   1.193 |      27.308 |           62.528 |      24     |                1 | no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil) |                                  0.296 |
+| 2026-06-25 00:00:00+02:00 |      55.363 |            0.994 |          0 |           25.451 |             29.679 |           49.462 |                   1.625 |      28.789 |           69.068 |      24     |                1 | no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil) |                                  0.267 |
+| 2026-06-26 00:00:00+02:00 |      53.895 |            1     |          0 |           25.936 |             28.293 |           50.454 |                   1.456 |      29.692 |           78.493 |      24     |                1 | no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil) |                                  0.349 |
+| 2026-06-27 00:00:00+02:00 |      49.318 |            1     |          0 |           26.687 |             27.072 |           50     |                   1.579 |      31.677 |           71.409 |      24     |                1 | no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil) |                                  0.221 |
+| 2026-06-28 00:00:00+02:00 |      46.466 |            0.917 |          0 |           26.85  |             26.77  |           48.829 |                   1.478 |      30.095 |           67.69  |      24     |                1 | no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil) |                                  0.318 |
+| 2026-06-29 00:00:00+02:00 |      32.682 |            0.68  |          0 |           25.884 |             28.484 |           41.931 |                   1.404 |      24.485 |           60.786 |      24     |                1 | no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil) |                                  0.097 |
 | 2026-06-30 00:00:00+02:00 |       0     |            0     |          0 |          nan     |            nan     |           37.83  |                 nan     |      23.738 |           51.226 |      24     |              nan | nan                                                                                                           |                                nan     |
 | 2026-07-01 00:00:00+02:00 |       6.891 |            0.118 |          0 |           23.743 |             32.405 |           36.903 |                   1.909 |      21.633 |           50.58  |      21     |                1 | no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil) |                                  0.3   |
 | 2026-07-02 00:00:00+02:00 |       6.727 |            0.198 |          0 |           22.814 |             33.855 |           28.811 |                   0.804 |      21.321 |           57.601 |       3.433 |                1 | no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil) |                                  0.301 |

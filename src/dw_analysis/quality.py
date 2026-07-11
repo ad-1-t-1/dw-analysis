@@ -40,32 +40,41 @@ def apply_plausibility(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
     return df, report
 
 
-def filter_artefacts(df: pd.DataFrame) -> tuple[pd.DataFrame, int]:
-    """Remove the disconnected-thermocouple artefact (~ −40 °C on T_reg_in).
+# Combined T/RH probes on the desiccant DAQ: when a probe is disconnected its
+# temperature channel reads ≈ −40 °C (0 V × gain − offset) AND its RH channel
+# reads 0.0 % — which would otherwise pass plausibility as "valid dry air"
+# and corrupt humidity-based KPIs. Mask both channels of the affected probe.
+_PROBE_PAIRS = {
+    "T_reg_in": "Phi_reg_in",
+    "T_reg_out": "Phi_reg_out",
+    "T_proc_in": "Phi_proc_in",
+    "T_proc_out": "Phi_proc_out",
+}
 
-    A disconnected input on the DAQ973A amplifier reads 0 V × gain − offset
-    ≈ −40 °C. Rows where T_reg_in ≤ T_ARTEFACT_THRESHOLD get ALL desiccant
-    channels masked (the whole DAQ scan is unreliable at that instant), but
-    solar channels are kept.
+
+def filter_artefacts(df: pd.DataFrame) -> tuple[pd.DataFrame, int]:
+    """Mask disconnected-probe artefacts PER SENSOR PAIR, not per row.
+
+    Verified on the 2026-06 dataset: while the regeneration-air probes were
+    disconnected (T = −40, RH = 0.0) for ~half the season, the process-air
+    probes and the circuit-III water sensors (T_VL/T_RL/V_dot) recorded
+    valid data throughout. Masking whole rows would silently discard >50 %
+    of the regeneration-heat measurement — so only the channels that are
+    provably bad are removed. Solar/UVR channels are never touched here.
+
+    Returns (cleaned df, number of masked probe-samples).
     """
     df = df.copy()
     n = 0
-    if "T_reg_in" in df.columns:
-        bad = df["T_reg_in"] <= config.T_ARTEFACT_THRESHOLD
-        n = int(bad.sum())
-        if n:
-            desic_cols = [c for c in df.columns
-                          if c in config.COLUMN_MAP.values()
-                          and not c.startswith(("T_Kollektor", "T_I", "T_II",
-                                                "T_SP", "T_AU", "P_el"))]
-            # safest explicit list: channels sourced from the desiccant DAQ
-            daq_cols = [c for c in ["T_reg_in", "Phi_reg_in", "T_RL_III",
-                                    "T_VL_III", "T_proc_in", "Phi_proc_in",
-                                    "T_proc_out", "Phi_proc_out", "T_reg_out",
-                                    "Phi_reg_out", "V_dot_III", "u_proc_out",
-                                    "T_proc_out_Vol", "V_dot_reg", "V_dot_II"]
-                        if c in df.columns]
-            df.loc[bad, daq_cols] = np.nan
+    for T_col, Phi_col in _PROBE_PAIRS.items():
+        if T_col not in df.columns:
+            continue
+        bad = df[T_col] <= config.T_ARTEFACT_THRESHOLD
+        if bad.any():
+            n += int(bad.sum())
+            df.loc[bad, T_col] = np.nan
+            if Phi_col in df.columns:
+                df.loc[bad, Phi_col] = np.nan
     return df, n
 
 

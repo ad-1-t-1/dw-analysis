@@ -58,7 +58,11 @@ the hydronic circuits are temperature-dependent (IAPWS-97).
 - Channels 117/118/120/122 are raw volts in trace files < 24 and
   logger-converted from trace 24 on. Ingestion detects the trace number and
   branches; **conversion coefficients are still missing** (see below).
-- Disconnected-thermocouple artefacts (≈ −40 °C) mask the whole DAQ scan row.
+- Disconnected-probe artefacts (T ≈ −40 °C with RH = 0.0 on the same probe)
+  are masked **per sensor pair**, not per row — the regen-air probes were
+  disconnected for ~half of June 2026 while the process-air and circuit-III
+  water sensors kept recording valid data, so row-level masking would
+  discard >50 % of the regeneration-heat measurement.
 - Timestamps are timezone-aware (Europe/Berlin) with explicit DST handling;
   integrals never interpolate across data gaps.
 

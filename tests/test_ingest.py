@@ -69,16 +69,21 @@ def test_post_cutoff_with_raw_columns_warns(tmp_path):
     assert any("check logger config" in str(x.message) for x in w)
 
 
-def test_artefact_filter():
+def test_artefact_filter_masks_only_affected_probe():
     idx = pd.date_range("2026-06-01", periods=3, freq="2min",
                         tz="Europe/Berlin")
     df = pd.DataFrame({"T_reg_in": [22.5, -40.0, 22.7],
-                       "T_proc_in": [26.0, 26.0, 26.0],
+                       "Phi_reg_in": [40.0, 0.0, 41.0],   # RH=0 artefact
+                       "T_proc_in": [26.0, 26.0, 26.0],   # valid probe
+                       "T_VL_III": [55.0, 56.0, 55.5],    # valid water sensor
                        "T_Kollektor": [55.0, 55.0, 55.0]}, index=idx)
     out, n = quality.filter_artefacts(df)
     assert n == 1
-    assert np.isnan(out["T_proc_in"].iloc[1])       # DAQ row masked
-    assert out["T_Kollektor"].iloc[1] == 55.0        # solar row kept
+    assert np.isnan(out["T_reg_in"].iloc[1])         # bad probe T masked
+    assert np.isnan(out["Phi_reg_in"].iloc[1])       # paired RH masked too
+    assert out["T_proc_in"].iloc[1] == 26.0          # other probe KEPT
+    assert out["T_VL_III"].iloc[1] == 56.0           # water circuit KEPT
+    assert out["T_Kollektor"].iloc[1] == 55.0        # solar KEPT
 
 
 def test_plausibility():
