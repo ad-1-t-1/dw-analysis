@@ -1,0 +1,24 @@
+/home/runner/work/dw-analysis/dw-analysis/src/dw_analysis/ingest.py:126: UserWarning: E2026-06-01_2026-06-16.csv: duplicate column names after cleaning ['PWM Pumpe_I'] — keeping first occurrence.
+  warnings.warn(f"{Path(filepath).name}: duplicate column names after "
+/home/runner/work/dw-analysis/dw-analysis/src/dw_analysis/ingest.py:126: UserWarning: E2026-06-01_2026-06-17.csv: duplicate column names after cleaning ['PWM Pumpe_I'] — keeping first occurrence.
+  warnings.warn(f"{Path(filepath).name}: duplicate column names after "
+/home/runner/work/dw-analysis/dw-analysis/src/dw_analysis/ingest.py:126: UserWarning: E2026-06-01_2026-07-02.csv: duplicate column names after cleaning ['PWM Pumpe_I'] — keeping first occurrence.
+  warnings.warn(f"{Path(filepath).name}: duplicate column names after "
+/home/runner/work/dw-analysis/dw-analysis/src/dw_analysis/enrich.py:86: RuntimeWarning: Mean of empty slice
+  cp = psychro.water_cp(np.nanmean(
+
+=== Season totals ===
+  Q_reg_kWh                        660.1850021923944
+  Q_reg_coverage                   0.5717150197380788
+  Q_reg_net_kWh                    660.182436282154
+  E_el_kWh                         0.0
+  solar_fraction                   1.0
+  solar_fraction_note              no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil)
+  solar_collection_share_while_running 0.20580098918601727
+  Q_reg_hydronic_kWh               660.1850021923944
+  Q_reg_air_kWh_window             1.2494248347538637
+  Q_reg_hydronic_kWh_window        8.82055298933704
+  closure_window_hours             3.2
+  closure                          0.1416492635171813
+
+Report: results/SUMMARY.md
