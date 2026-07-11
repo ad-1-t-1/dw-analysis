@@ -11,8 +11,11 @@ from __future__ import annotations
 # General
 # ─────────────────────────────────────────────────────────────────────────────
 TZ = "Europe/Berlin"          # plant location; DST handled at tz-localize
-P_ATM = 101_325.0             # Pa — site pressure assumption (Kassel ~230 m
-                              # a.s.l. → true mean ≈ 98.6 kPa; see OPEN_ISSUES)
+P_ATM = 98_600.0              # Pa — mean site pressure, Kassel ≈ 230 m a.s.l.
+                              # (barometric formula: 101325·(1−2.25577e-5·230)^5.2559)
+                              # Was 101 325 until 2026-07-12; that biased all
+                              # humidity ratios ~2.7 % low. Replace with the
+                              # measured station value when available.
 RESAMPLE_RULE = "2min"        # common time grid for merged dataset
 MAX_INTEGRATION_GAP = "6min"  # gaps longer than this are excluded from
                               # time integrals instead of being interpolated

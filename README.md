@@ -1,5 +1,11 @@
 # dw-analysis — Solar-assisted desiccant wheel pilot plant (Univ. of Kassel)
 
+![tests](https://github.com/ad-1-t-1/dw-analysis/actions/workflows/tests.yml/badge.svg)
+![weekly-analysis](https://github.com/ad-1-t-1/dw-analysis/actions/workflows/analysis.yml/badge.svg)
+
+> Read the numbers together with [docs/CRITICAL_REVIEW.md](docs/CRITICAL_REVIEW.md)
+> — an intentionally hostile review of what can and cannot be trusted yet.
+
 Automated analysis of weekly measurement data from the pilot plant coupling
 a solar thermal system (collector + stratified storage) with a desiccant
 wheel for air dehumidification.
@@ -74,7 +80,7 @@ the hydronic circuits are temperature-dependent (IAPWS-97).
 | 2 | Duct area at velocity sensor ch 117 → `config.PROC_DUCT_AREA_M2` | process air mass flow, water removed, COP not computable from measurement |
 | 3 | Units of ch 120 (assumed m³/h; measured values ≈ 75–83 in Trace 21 window) → `config.V_DOT_REG_UNITS` | air-side balance scales directly with this |
 | 4 | Flow-meter position in circuit III (supply or return?) | ~1 % systematic on Q_reg |
-| 5 | Site pressure (assumed 101.325 kPa; Kassel ≈ 98.6 kPa) → `config.P_ATM` | humidity ratios ~2.7 % systematic |
+| 5 | ~~Site pressure~~ **fixed** — `config.P_ATM` = 98.6 kPa (barometric, 230 m a.s.l.); replace with measured station pressure when available | — |
 | 6 | Is there any non-solar heat source feeding the regeneration coil? | solar fraction currently 1.0 by system boundary |
 | 7 | Energy-balance closure over the first air-flow window (3.2 h, Trace 21) is only **0.14** — air stream picks up ~14 % of the hydronic heat input. Candidates: ch 120 units/range, HX losses, wheel not rotating during that (overnight) window, or T_reg_nach_HX not representative at low flow | air-side balance untrustworthy until explained |
 | 8 | `P_el` is 0.0 throughout the dataset — electrical power channel not delivering | E_el and electric COP unavailable |

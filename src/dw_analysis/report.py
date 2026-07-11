@@ -22,11 +22,21 @@ def write_report(path: Path, *, title: str, quality: dict, totals: dict,
                  solar: dict, balance: dict, flow_meta: dict,
                  binned: pd.DataFrame, daily: pd.DataFrame,
                  figures: list[str]) -> None:
-    md = [f"# {title}", ""]
+    import datetime
+    import os
+    stamp = datetime.datetime.now(datetime.timezone.utc).strftime(
+        "%Y-%m-%d %H:%M UTC")
+    sha = os.environ.get("GITHUB_SHA", "local")[:9]
+    md = [f"# {title}", "",
+          f"_Run: {stamp} · code+data revision `{sha}`. Every pipeline run "
+          f"rewrites this stamp, so a fresh commit here proves the analysis "
+          f"actually ran on your upload._", ""]
 
     md += ["## Data quality", "", _dict_table(quality), ""]
 
-    md += ["## Season / period totals", ""]
+    md += ["## Measured-period totals", "",
+           "**Not full-season totals** — integrals cover only instrumented "
+           "periods (see coverage figures); no extrapolation is applied.", ""]
     if totals:
         md += [_dict_table(totals), ""]
     else:

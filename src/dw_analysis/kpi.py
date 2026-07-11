@@ -118,6 +118,10 @@ def period_totals(df: pd.DataFrame) -> dict:
         q, cov = integrate_rate(df["Q_reg_W"].clip(lower=0))
         out["Q_reg_kWh"] = q / 3.6e6
         out["Q_reg_coverage"] = cov
+        # net integral (negative dT periods NOT discarded) — if this differs
+        # much from Q_reg_kWh, the positive-only number is inflated by noise
+        q_net, _ = integrate_rate(df["Q_reg_W"])
+        out["Q_reg_net_kWh"] = q_net / 3.6e6
     if "Q_latent_W" in df.columns:
         q, _ = integrate_rate(df["Q_latent_W"].clip(lower=0))
         out["Q_latent_kWh"] = q / 3.6e6
