@@ -32,10 +32,17 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Run tests first (never publish results from broken code)
         run: pytest -q
-      - name: Run analysis pipeline
-        run: python run_analysis.py --raw data/raw --out results
-      - name: Commit refreshed results
+      - name: Run analysis pipeline (log captured into repo)
+        id: pipeline
+        continue-on-error: true
+        run: |
+          set -o pipefail
+          python run_analysis.py --raw data/raw --out results 2>&1 | tee results/ci_log.txt
+      - name: Commit results + log (even when the pipeline failed)
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
-          commit_message: "auto: refresh analysis results [skip ci]"
+          commit_message: "auto: refresh analysis results (pipeline ${{ steps.pipeline.outcome }}) [skip ci]"
           file_pattern: "results/**"
+      - name: Surface pipeline failure
+        if: steps.pipeline.outcome == 'failure'
+        run: exit 1
