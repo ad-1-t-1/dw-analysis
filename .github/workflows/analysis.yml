@@ -11,6 +11,8 @@ on:
       - "data/legacy/**"
       - "src/**"
       - "run_analysis.py"
+      - "requirements.txt"
+      - ".github/workflows/analysis.yml"
   workflow_dispatch: {}
 
 permissions:
