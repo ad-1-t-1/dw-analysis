@@ -40,7 +40,6 @@ def instantaneous(df: pd.DataFrame) -> pd.DataFrame:
                    Q̇_reg = hydronic heat to the regeneration coil
                    (circuit III). Source: Angrisani et al. (2012),
                    Applied Energy 92 — their COP_el analogue, thermal form.
-    SHR            Sensible heat ratio of the process stream.
     SMR_g_per_kJ   Specific moisture removal = MRR / Q̇_reg    [g/kJ]
                    (inverse of specific regeneration heat demand).
     """
@@ -59,11 +58,6 @@ def instantaneous(df: pd.DataFrame) -> pd.DataFrame:
         df["COP_th"] = (df["Q_latent_W"]
                         / df["Q_reg_W"].where(df["Q_reg_W"] > 50.0))
         # Q_reg < 50 W → wheel not being regenerated; COP meaningless
-
-    if {"Q_proc_enthalpy_W", "Q_latent_W"} <= set(df.columns):
-        q_sens = df["Q_proc_enthalpy_W"] - (-df["Q_latent_W"])
-        tot = df["Q_proc_enthalpy_W"].abs() + EPS
-        df["SHR"] = (q_sens.abs() / tot).clip(0, 1)
 
     if {"MRR_gs", "Q_reg_W"} <= set(df.columns):
         df["SMR_g_per_kJ"] = (df["MRR_gs"]
