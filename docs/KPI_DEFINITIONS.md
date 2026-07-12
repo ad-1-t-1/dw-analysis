@@ -22,7 +22,6 @@ conserved quantity across the wheel.
 | Specific regeneration heat demand | SRH | Q_reg / m_w | kWh/kg | inverse of "specific moisture removal"; cf. Comino et al. 2021 |
 | Solar fraction | SF | 1 − Q_aux/Q_reg (boundary: regeneration coil) | – | Duffie & Beckman, Solar Eng. of Thermal Processes, Ch. 20 convention |
 | Energy-balance closure | – | Q_reg,air / Q_reg,hydronic | – | internal consistency check |
-| Sensible heat ratio | SHR | Q̇_sens/(Q̇_sens+Q̇_lat) on process stream | – | ASHRAE convention |
 
 ## Deliberate choices (and why)
 
