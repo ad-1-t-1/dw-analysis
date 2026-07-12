@@ -62,8 +62,12 @@ for seasonal claims.
 
 11. Repo stores raw data in git (38 MB and growing weekly): fine for a
     season, will need git-LFS or external storage within a year.
-12. Dependencies are lower-bounded but not upper-pinned; a pandas 3.x
-    release could silently break CI.
+12. ✅ **Dependency pinning — this bit us for real.** CI (Python 3.11) was
+    resolving pandas 3.0, whose new microsecond default resolution made all
+    time integrals exactly 1000× too small; the test gate blocked every
+    publish until `pandas<3` was pinned. The integration code is now
+    resolution-proof (`as_unit("ns")`) with a regression test, so the pin is
+    a guard, not a load-bearing wall.
 13. No end-to-end integration test (tiny synthetic raw folder → SUMMARY).
 14. Channel 111 (Vdc) remains unidentified.
 

@@ -87,7 +87,11 @@ def integrate_rate(series: pd.Series,
     s = series.dropna()
     if len(s) < 2:
         return 0.0, 0.0
-    t = s.index.view("int64") / 1e9          # seconds
+    # Resolution-proof timestamp → seconds conversion. pandas 3.0 changed the
+    # default datetime resolution from ns to µs; a raw int64 view divided by
+    # 1e9 then shrinks every integral by 1000× (caught by CI on 2026-07-10:
+    # four integration tests failed with exactly 1000×-too-small values).
+    t = s.index.as_unit("ns").asi8 / 1e9      # seconds, any input resolution
     dt = np.diff(t)
     max_gap_s = pd.Timedelta(max_gap).total_seconds()
     ok = dt <= max_gap_s

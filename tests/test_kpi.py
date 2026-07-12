@@ -20,6 +20,16 @@ def test_integrate_constant_rate():
     assert cov == pytest.approx(1.0)
 
 
+def test_integrate_resolution_independent():
+    # pandas 3.0 defaults new datetimes to microsecond resolution; the
+    # integral must not change with the index unit (CI regression 2026-07-10:
+    # ns-assuming code gave values exactly 1000× too small under µs indexes)
+    s = _series([1.0] * 31)
+    s_us = pd.Series(s.values, index=s.index.as_unit("us"))
+    val, _ = kpi.integrate_rate(s_us)
+    assert val == pytest.approx(3600.0, rel=1e-9)
+
+
 def test_integrate_excludes_gaps():
     # 1 W, but a 30-min hole in the middle → only the two 20-min blocks count
     idx = (list(pd.date_range("2026-06-01 12:00", periods=11, freq="2min"))
