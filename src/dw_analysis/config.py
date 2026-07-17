@@ -42,6 +42,27 @@ V_DOT_REG_ASSUMED: float | None = None
 V_DOT_REG_UNITS = "m3/h"
 
 # ─────────────────────────────────────────────────────────────────────────────
+# Thermal storage (Speicher) — for the storage energy balance
+# ─────────────────────────────────────────────────────────────────────────────
+# Water volume of the stratified store [m³]. None → the stored-energy-change
+# term (ΔU) of the storage balance is reported PER m³ only (the temperature
+# signal is still usable); set the datasheet value to get absolute ΔU, standby
+# losses and the charge/discharge closure.
+STORAGE_VOLUME_M3: float | None = None
+
+# Storage temperature layers, top → bottom. Their mean is the bulk store
+# temperature T̄ used for ΔU = M·c_p,w·ΔT̄.
+STORAGE_LAYER_COLS = ["T_SP_oben", "T_SP_mitte_ob",
+                      "T_SP_mitte_unten", "T_SP_unten"]
+
+# Solar charging circuit feeding the store (circuit II, collector side):
+# Q̇_charge = ρ_w·V̇_II·c_p,w·(T_II_VL − T_II_RL).
+# Units of its volume-flow channel (ch 122) — UNVERIFIED, confirm vs
+# datasheet. Options: "L/h", "L/s", "m3/h", "m3/s". (ch 122 is also sparsely
+# populated, so the charge side is often "not computable" until wired up.)
+V_DOT_II_UNITS = "L/h"
+
+# ─────────────────────────────────────────────────────────────────────────────
 # DAQ973A trace-number dependent sensor conversions
 # ─────────────────────────────────────────────────────────────────────────────
 # Channels 117/118/120/122 were added as raw voltage (Vdc) channels.

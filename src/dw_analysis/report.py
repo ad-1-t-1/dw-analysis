@@ -21,7 +21,8 @@ def _dict_table(d: dict) -> str:
 def write_report(path: Path, *, title: str, quality: dict, totals: dict,
                  solar: dict, balance: dict, flow_meta: dict,
                  binned: pd.DataFrame, daily: pd.DataFrame,
-                 figures: list[str]) -> None:
+                 figures: list[str], hx_balance: dict | None = None,
+                 store_balance: dict | None = None) -> None:
     import datetime
     import os
     stamp = datetime.datetime.now(datetime.timezone.utc).strftime(
@@ -50,6 +51,25 @@ def write_report(path: Path, *, title: str, quality: dict, totals: dict,
 
     md += ["## Energy-balance closure", "",
            _dict_table(balance) if balance else "_Not computable._", ""]
+
+    md += ["## Air-to-water HX balance (regeneration coil)", "",
+           "Boundary = regeneration heating coil. Water side "
+           "(`Q_hx_water` = circuit-III heat given up) vs air side "
+           "(`Q_hx_air` = regeneration-air sensible gain across the coil). "
+           "`hx_closure = Q_hx_air / Q_hx_water` — expected ≈ 0.8–1.0; the "
+           "air side needs the ch 120 regeneration air flow, so the closure "
+           "covers only the window where both sides are measured.", ""]
+    md += [_dict_table(hx_balance) if hx_balance else "_Not computable._", ""]
+
+    md += ["## Thermal-storage balance (energy in vs out + ΔU)", "",
+           "Boundary = stratified store. Charge (`Q_store_in`, circuit II) "
+           "vs discharge (`Q_store_out`, circuit III = regeneration heat) "
+           "plus the stored-energy change ΔU from the SP layer temperatures. "
+           "Absolute ΔU, standby loss and closure require the tank volume "
+           "(`config.STORAGE_VOLUME_M3`); until then ΔU is reported per m³.",
+           ""]
+    md += [_dict_table(store_balance) if store_balance else "_Not computable._",
+           ""]
 
     if not binned.empty:
         md += ["## KPIs by regeneration temperature bin", "",

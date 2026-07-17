@@ -27,4 +27,10 @@ if __name__ == "__main__":
         print(f"  {k:32s} {v}")
     for k, v in {**res["solar"], **res["balance"]}.items():
         print(f"  {k:32s} {v}")
+    print("\n=== Air-to-water HX balance ===")
+    for k, v in res["hx_balance"].items():
+        print(f"  {k:32s} {v}")
+    print("\n=== Thermal-storage balance ===")
+    for k, v in res["store_balance"].items():
+        print(f"  {k:32s} {v}")
     print(f"\nReport: {Path(args.out) / 'SUMMARY.md'}")

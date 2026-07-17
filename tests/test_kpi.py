@@ -92,3 +92,73 @@ def test_solar_fraction_with_aux():
     })
     sf = kpi.solar_fraction(df, Q_aux_col="Q_aux_W")
     assert sf["solar_fraction"] == pytest.approx(0.75, rel=1e-9)
+
+
+# ── air-to-water HX balance ──────────────────────────────────────────────
+def test_hx_energy_balance_closure():
+    # water side 1000 W, air side 900 W, both measured for 1 h
+    df = pd.DataFrame({
+        "Q_reg_W": _series([1000.0] * 31),
+        "Q_hx_air_W": _series([900.0] * 31),
+    })
+    hb = kpi.hx_energy_balance(df)
+    assert hb["Q_hx_water_kWh"] == pytest.approx(1.0, rel=1e-9)
+    assert hb["Q_hx_air_kWh_window"] == pytest.approx(0.9, rel=1e-9)
+    assert hb["hx_closure"] == pytest.approx(0.9, rel=1e-9)
+
+
+def test_hx_closure_only_over_common_window():
+    # air side measured for only the first 11 of 31 samples (20 min);
+    # water side runs the full hour. Closure must use the common window,
+    # so water_window ≈ 20 min · 1000 W, not the full hour.
+    air = [900.0] * 11 + [np.nan] * 20
+    df = pd.DataFrame({
+        "Q_reg_W": _series([1000.0] * 31),
+        "Q_hx_air_W": _series(air),
+    })
+    hb = kpi.hx_energy_balance(df)
+    assert hb["Q_hx_water_kWh"] == pytest.approx(1.0, rel=1e-9)          # full
+    # 11 overlapping samples on the 2-min grid → ~0.37 h (rounds to 0.4);
+    # the point is it is well below the full hour.
+    assert hb["hx_window_hours"] < 0.5
+    assert hb["hx_closure"] == pytest.approx(0.9, rel=1e-9)
+
+
+def test_hx_note_when_no_air_side():
+    df = pd.DataFrame({"Q_reg_W": _series([1000.0] * 31)})
+    hb = kpi.hx_energy_balance(df)
+    assert "hx_closure" not in hb
+    assert "hx_note" in hb
+
+
+# ── thermal-storage balance ──────────────────────────────────────────────
+def test_storage_discharge_and_dU_per_m3():
+    # discharge 1000 W for 1 h → 1 kWh out; store warms 50→54 °C → ΔU>0
+    df = pd.DataFrame({
+        "Q_store_out_W": _series([1000.0] * 31),
+        "T_store_mean": _series(list(np.linspace(50.0, 54.0, 31))),
+    })
+    sb = kpi.storage_energy_balance(df)
+    assert sb["Q_store_out_kWh"] == pytest.approx(1.0, rel=1e-9)
+    assert sb["T_store_start_C"] == pytest.approx(50.0, abs=1e-6)
+    assert sb["T_store_end_C"] == pytest.approx(54.0, abs=1e-6)
+    assert sb["dU_store_kWh_per_m3"] > 0            # warming → energy stored
+    assert "dU_store_kWh" not in sb                 # no volume set → per-m³ only
+
+
+def test_storage_absolute_dU_with_volume(monkeypatch):
+    from dw_analysis import config as cfg
+    monkeypatch.setattr(cfg, "STORAGE_VOLUME_M3", 2.0)
+    df = pd.DataFrame({
+        "T_store_mean": _series(list(np.linspace(50.0, 54.0, 31))),
+    })
+    sb = kpi.storage_energy_balance(df)
+    assert sb["dU_store_kWh"] == pytest.approx(
+        sb["dU_store_kWh_per_m3"] * 2.0, rel=1e-9)
+
+
+def test_storage_charge_note_when_no_flow():
+    df = pd.DataFrame({"Q_store_out_W": _series([500.0] * 31)})
+    sb = kpi.storage_energy_balance(df)
+    assert "Q_store_in_kWh" not in sb
+    assert "Q_store_in_note" in sb

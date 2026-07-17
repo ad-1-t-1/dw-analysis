@@ -160,4 +160,42 @@ def enrich(df: pd.DataFrame, p_atm: float = config.P_ATM) -> tuple[pd.DataFrame,
     if {"T_I_VL", "T_I_RL"} <= set(df.columns):
         df["dT_solar_I"] = df["T_I_VL"] - df["T_I_RL"]
 
+    # ── air-to-water HX (regeneration heating coil): air-side gain ───────
+    # The coil heats the regeneration air from T_reg_in (pre-heater state)
+    # to T_reg_eff (= T_reg_nach_HX) at CONSTANT humidity ratio (sensible
+    # heating, no condensation), so the air-side heat picked up in the coil
+    # is  Q̇_hx,air = ṁ_da,reg · [h(T_reg_eff, x_reg_in) − h(T_reg_in, x_reg_in)].
+    #   h_reg_wheel_in = h(T_reg_eff, x_reg_in)  (built above)
+    #   h_reg_in       = h(T_reg_in,  Φ_reg_in)  (built in the STREAMS loop;
+    #                    same humidity ratio x_reg_in)
+    # Water side of the same HX is Q_reg_W (circuit III). kpi.hx_energy_balance
+    # compares the two.
+    if {"m_dot_da_reg", "h_reg_wheel_in", "h_reg_in"} <= set(df.columns):
+        df["Q_hx_air_W"] = df["m_dot_da_reg"] * (df["h_reg_wheel_in"]
+                                                 - df["h_reg_in"])
+
+    # ── thermal storage: charge / discharge / bulk temperature ──────────
+    # Discharge to the regeneration coil is circuit III → equals Q_reg_W.
+    if "Q_reg_W" in df.columns:
+        df["Q_store_out_W"] = df["Q_reg_W"]
+
+    # Charge from the collector side is circuit II:
+    #   Q̇_charge = ρ_w(T_RL_II)·V̇_II·c_p,w·(T_II_VL − T_II_RL).
+    # V̇_II units and coverage are UNVERIFIED (config.V_DOT_II_UNITS).
+    if {"T_II_VL", "T_II_RL", "V_dot_II"} <= set(df.columns):
+        dT_II = df["T_II_VL"] - df["T_II_RL"]
+        rho_II = psychro.water_rho(df["T_II_RL"].values)
+        cp_II = psychro.water_cp(np.nanmean(
+            np.vstack([df["T_II_VL"].values, df["T_II_RL"].values]), axis=0))
+        factor = {"L/h": 1 / 3.6e6, "L/s": 1e-3,
+                  "m3/h": 1 / 3600.0, "m3/s": 1.0}[config.V_DOT_II_UNITS]
+        m_dot_II = df["V_dot_II"].clip(lower=0).values * factor * rho_II
+        df["m_dot_water_II"] = m_dot_II
+        df["Q_store_in_W"] = m_dot_II * cp_II * dT_II.values
+
+    # Bulk store temperature = mean of the stratification layers present.
+    sp_cols = [c for c in config.STORAGE_LAYER_COLS if c in df.columns]
+    if sp_cols:
+        df["T_store_mean"] = df[sp_cols].mean(axis=1)
+
     return df, meta

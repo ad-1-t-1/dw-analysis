@@ -15,7 +15,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from . import config
+from . import config, psychro
 
 EPS = 1e-12
 
@@ -263,4 +263,107 @@ def energy_balance(df: pd.DataFrame) -> dict:
         w_proc, _ = integrate_rate(df["MRR_kgs"].clip(lower=0))
         if w_proc > 0:
             out["moisture_closure"] = w_reg / w_proc
+    return out
+
+
+def hx_energy_balance(df: pd.DataFrame) -> dict:
+    """Air-to-water regeneration heat-exchanger balance (energy in vs out).
+
+    System boundary = the regeneration heating coil ONLY:
+
+        energy in  (water side)  Q_hx_water = ∫ Q̇_reg dt   [circuit III]
+        energy out (air side)    Q_hx_air   = ∫ ṁ_da,reg·Δh_coil dt
+                   with Δh_coil = h(T_reg_eff, x_reg_in) − h(T_reg_in, x_reg_in)
+                   (sensible-only air heating across the coil, x conserved)
+
+        closure = Q_hx_air / Q_hx_water     (expected ≈ 0.8–1.0: coil + duct
+                  losses; ≫1 or ≪0.5 ⇒ a flow-unit or sensor error)
+
+    The air side needs the regeneration air flow (ch 120). The closure is
+    therefore computed only over the window where BOTH sides are measured;
+    the full-record water side is always reported for context. Distinct from
+    energy_balance(), whose air term is the enthalpy change across the WHEEL,
+    not across the coil.
+    """
+    out: dict = {}
+    if "Q_reg_W" in df.columns:
+        q_w, _ = integrate_rate(df["Q_reg_W"].clip(lower=0))
+        out["Q_hx_water_kWh"] = q_w / 3.6e6
+    if "Q_hx_air_W" in df.columns and "Q_reg_W" in df.columns:
+        both = df["Q_reg_W"].notna() & df["Q_hx_air_W"].notna()
+        if both.any():
+            q_air, _ = integrate_rate(df.loc[both, "Q_hx_air_W"].clip(lower=0))
+            q_wat, _ = integrate_rate(df.loc[both, "Q_reg_W"].clip(lower=0))
+            out["Q_hx_air_kWh_window"] = q_air / 3.6e6
+            out["Q_hx_water_kWh_window"] = q_wat / 3.6e6
+            out["hx_window_hours"] = round(
+                both.sum() * pd.Timedelta(config.RESAMPLE_RULE
+                                          ).total_seconds() / 3600.0, 1)
+            if q_wat > 0:
+                out["hx_closure"] = q_air / q_wat
+    else:
+        out["hx_note"] = ("regeneration air flow (ch 120) unavailable — "
+                          "air side of the HX balance not computable")
+    return out
+
+
+def storage_energy_balance(df: pd.DataFrame) -> dict:
+    """Thermal-storage (Speicher) energy balance: energy in vs energy out + ΔU.
+
+    System boundary = the stratified hot-water store:
+
+        charge    (in)  Q_store_in  = ∫ Q̇_II dt     [circuit II, collector side]
+        discharge (out) Q_store_out = ∫ Q̇_III dt    [circuit III → regen coil;
+                                                      equals Q_reg]
+        stored change   ΔU = M·c_p,w·(T̄_end − T̄_start),
+                        T̄ = mean of the SP layer temperatures,
+                        M = ρ_w·config.STORAGE_VOLUME_M3
+
+        standby loss = Q_store_in − Q_store_out − ΔU        (≥ 0 expected)
+        closure      = (Q_store_out + ΔU) / Q_store_in
+
+    ΔU needs the tank volume: if config.STORAGE_VOLUME_M3 is unset, ΔU is
+    reported PER m³ (dU_store_kWh_per_m3) so the temperature signal is still
+    usable, and the loss/closure are withheld. The charge side needs the
+    circuit-II flow (ch 122), which is sparse/unverified — reported as
+    'not computable' until wired up.
+    """
+    out: dict = {}
+    if "Q_store_out_W" in df.columns:
+        q_out, cov = integrate_rate(df["Q_store_out_W"].clip(lower=0))
+        out["Q_store_out_kWh"] = q_out / 3.6e6
+        out["Q_store_out_coverage"] = round(cov, 3)
+    if "Q_store_in_W" in df.columns and df["Q_store_in_W"].notna().any():
+        q_in, cov = integrate_rate(df["Q_store_in_W"].clip(lower=0))
+        out["Q_store_in_kWh"] = q_in / 3.6e6
+        out["Q_store_in_coverage"] = round(cov, 3)
+    else:
+        out["Q_store_in_note"] = ("circuit-II charge flow (ch 122) "
+                                  "unavailable — charge side not computable")
+
+    # stored-energy change from the bulk store temperature
+    if "T_store_mean" in df.columns:
+        s = df["T_store_mean"].dropna()
+        if len(s) >= 2:
+            T0, T1 = float(s.iloc[0]), float(s.iloc[-1])
+            Tm = 0.5 * (T0 + T1)
+            rho = float(psychro.water_rho(np.array([Tm]))[0])
+            cp = float(psychro.water_cp(np.array([Tm]))[0])
+            out["T_store_start_C"] = round(T0, 2)
+            out["T_store_end_C"] = round(T1, 2)
+            dU_per_m3 = rho * cp * (T1 - T0) / 3.6e6      # kWh/m³
+            out["dU_store_kWh_per_m3"] = dU_per_m3
+            if config.STORAGE_VOLUME_M3:
+                dU = dU_per_m3 * config.STORAGE_VOLUME_M3
+                out["dU_store_kWh"] = dU
+                if "Q_store_in_kWh" in out and "Q_store_out_kWh" in out:
+                    out["storage_loss_kWh"] = (out["Q_store_in_kWh"]
+                                               - out["Q_store_out_kWh"] - dU)
+                    if out["Q_store_in_kWh"] > 0:
+                        out["storage_closure"] = (
+                            (out["Q_store_out_kWh"] + dU)
+                            / out["Q_store_in_kWh"])
+            else:
+                out["dU_store_note"] = ("set config.STORAGE_VOLUME_M3 for "
+                                        "absolute ΔU, standby loss and closure")
     return out

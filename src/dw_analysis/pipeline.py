@@ -62,6 +62,8 @@ def run(raw_dir: str | Path | None = None,
     totals = kpi.period_totals(df)
     solar = kpi.solar_fraction(df)
     balance = kpi.energy_balance(df)
+    hx_balance = kpi.hx_energy_balance(df)
+    store_balance = kpi.storage_energy_balance(df)
     daily = kpi.resampled_summary(df, "D")
     weekly = kpi.resampled_summary(df, "W-MON")
     binned = kpi.kpis_by_temp_bin(df)
@@ -95,7 +97,9 @@ def run(raw_dir: str | Path | None = None,
         title=(f"Solar-assisted desiccant wheel — season summary "
                f"({qsum['start'][:10]} → {qsum['end'][:10]})"),
         quality=qsum, totals=totals, solar=solar, balance=balance,
+        hx_balance=hx_balance, store_balance=store_balance,
         flow_meta=flow_meta, binned=binned, daily=daily, figures=figs)
 
     return {"df": df, "daily": daily, "weekly": weekly, "totals": totals,
-            "solar": solar, "balance": balance, "quality": qsum}
+            "solar": solar, "balance": balance, "hx_balance": hx_balance,
+            "store_balance": store_balance, "quality": qsum}

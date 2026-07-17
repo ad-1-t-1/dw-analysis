@@ -21,7 +21,14 @@ conserved quantity across the wheel.
 | Thermal COP (period) | COP_th | Q_lat / Q_reg | – | thermal analogue of Angrisani et al. 2012 |
 | Specific regeneration heat demand | SRH | Q_reg / m_w | kWh/kg | inverse of "specific moisture removal"; cf. Comino et al. 2021 |
 | Solar fraction | SF | 1 − Q_aux/Q_reg (boundary: regeneration coil) | – | Duffie & Beckman, Solar Eng. of Thermal Processes, Ch. 20 convention |
-| Energy-balance closure | – | Q_reg,air / Q_reg,hydronic | – | internal consistency check |
+| Energy-balance closure | – | Q_reg,air / Q_reg,hydronic | – | internal consistency check (air term = enthalpy change across the WHEEL) |
+| HX air-side heat | Q̇_hx,air | ṁ_da,reg · [h(T_reg,eff, x_reg,in) − h(T_reg,in, x_reg,in)] | W | air-to-water coil balance, sensible (x conserved) |
+| HX closure | – | Q_hx,air / Q_hx,water  (Q_hx,water = Q_reg) | – | air-to-water coil energy in vs out; expected ≈ 0.8–1.0 |
+| Storage discharge | Q̇_store,out | Q̇_reg  (circuit III to the regeneration coil) | W | store energy out |
+| Storage charge | Q̇_store,in | ρ_w·V̇_II·c_p,w·(T_II,VL − T_II,RL) | W | store energy in (circuit II); V̇_II units unverified |
+| Stored-energy change | ΔU | M·c_p,w·(T̄_end − T̄_start), M = ρ_w·V_tank, T̄ = mean SP layers | kWh | store internal-energy change; V_tank = config.STORAGE_VOLUME_M3 |
+| Storage standby loss | – | Q_store,in − Q_store,out − ΔU | kWh | first-law store balance (≥0 expected) |
+| Storage closure | – | (Q_store,out + ΔU) / Q_store,in | – | store energy in vs out + accumulation |
 
 ## Deliberate choices (and why)
 

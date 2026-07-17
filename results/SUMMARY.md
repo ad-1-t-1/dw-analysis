@@ -1,6 +1,6 @@
 # Solar-assisted desiccant wheel — season summary (2026-06-10 → 2026-07-02)
 
-_Run: 2026-07-12 16:03 UTC · code+data revision `13293ed12`. Every pipeline run rewrites this stamp, so a fresh commit here proves the analysis actually ran on your upload._
+_Run: 2026-07-16 08:18 UTC · code+data revision `local`. Every pipeline run rewrites this stamp, so a fresh commit here proves the analysis actually ran on your upload._
 
 ## Data quality
 
@@ -45,6 +45,33 @@ _Air-flow sources: process = None, regeneration = measured (m3/h assumed)._
 | Q_reg_hydronic_kWh_window | 8.821 |
 | closure_window_hours | 3.200 |
 | closure | 0.142 |
+
+## Air-to-water HX balance (regeneration coil)
+
+Boundary = regeneration heating coil. Water side (`Q_hx_water` = circuit-III heat given up) vs air side (`Q_hx_air` = regeneration-air sensible gain across the coil). `hx_closure = Q_hx_air / Q_hx_water` — expected ≈ 0.8–1.0; the air side needs the ch 120 regeneration air flow, so the closure covers only the window where both sides are measured.
+
+| Quantity | Value |
+|---|---|
+| Q_hx_water_kWh | 660.185 |
+| Q_hx_air_kWh_window | 2.250 |
+| Q_hx_water_kWh_window | 8.821 |
+| hx_window_hours | 3.200 |
+| hx_closure | 0.255 |
+
+## Thermal-storage balance (energy in vs out + ΔU)
+
+Boundary = stratified store. Charge (`Q_store_in`, circuit II) vs discharge (`Q_store_out`, circuit III = regeneration heat) plus the stored-energy change ΔU from the SP layer temperatures. Absolute ΔU, standby loss and closure require the tank volume (`config.STORAGE_VOLUME_M3`); until then ΔU is reported per m³.
+
+| Quantity | Value |
+|---|---|
+| Q_store_out_kWh | 660.185 |
+| Q_store_out_coverage | 0.572 |
+| Q_store_in_kWh | 11.245 |
+| Q_store_in_coverage | 0.021 |
+| T_store_start_C | 41.200 |
+| T_store_end_C | 68.260 |
+| dU_store_kWh_per_m3 | 30.991 |
+| dU_store_note | set config.STORAGE_VOLUME_M3 for absolute ΔU, standby loss and closure |
 
 ## KPIs by regeneration temperature bin
 
