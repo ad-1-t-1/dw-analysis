@@ -1,6 +1,6 @@
 # Solar-assisted desiccant wheel — season summary (2026-06-10 → 2026-07-02)
 
-_Run: 2026-07-16 08:18 UTC · code+data revision `local`. Every pipeline run rewrites this stamp, so a fresh commit here proves the analysis actually ran on your upload._
+_Run: 2026-07-18 19:29 UTC · code+data revision `local`. Every pipeline run rewrites this stamp, so a fresh commit here proves the analysis actually ran on your upload._
 
 ## Data quality
 
@@ -26,7 +26,7 @@ _Run: 2026-07-16 08:18 UTC · code+data revision `local`. Every pipeline run rew
 | Q_reg_net_kWh | 660.182 |
 | E_el_kWh | 0.000 |
 
-_Air-flow sources: process = None, regeneration = measured (m3/h assumed)._
+_Air-flow sources: process = None, regeneration = measured (L/s assumed)._
 
 ## Solar contribution
 
@@ -41,10 +41,10 @@ _Air-flow sources: process = None, regeneration = measured (m3/h assumed)._
 | Quantity | Value |
 |---|---|
 | Q_reg_hydronic_kWh | 660.185 |
-| Q_reg_air_kWh_window | 1.249 |
+| Q_reg_air_kWh_window | 4.498 |
 | Q_reg_hydronic_kWh_window | 8.821 |
 | closure_window_hours | 3.200 |
-| closure | 0.142 |
+| closure | 0.510 |
 
 ## Air-to-water HX balance (regeneration coil)
 
@@ -53,10 +53,10 @@ Boundary = regeneration heating coil. Water side (`Q_hx_water` = circuit-III hea
 | Quantity | Value |
 |---|---|
 | Q_hx_water_kWh | 660.185 |
-| Q_hx_air_kWh_window | 2.250 |
+| Q_hx_air_kWh_window | 8.100 |
 | Q_hx_water_kWh_window | 8.821 |
 | hx_window_hours | 3.200 |
-| hx_closure | 0.255 |
+| hx_closure | 0.918 |
 
 ## Thermal-storage balance (energy in vs out + ΔU)
 

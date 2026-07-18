@@ -62,7 +62,10 @@ conserved quantity across the wheel.
   pressure for now to stay comparable with the earlier analysis; flagged.)
 - Flow-meter location in circuit III (supply vs return line) affects ρ_w by
   ~1 %; return line assumed — verify on the plant.
-- Units of the regeneration flow channel (ch 120) are assumed m³/h — verify.
+- Units of the regeneration flow channel (ch 120) are set to L/s, inferred
+  from the regeneration-coil energy balance (closure 0.255 with m³/h vs
+  ≈ 0.92 with L/s; see comment at `config.V_DOT_REG_UNITS`) — still confirm
+  against the sensor datasheet.
 - RH-sensor uncertainty (typ. ±2–3 % RH) dominates the uncertainty of Δx and
   hence all moisture KPIs; a formal uncertainty propagation is on the
   roadmap (see README).

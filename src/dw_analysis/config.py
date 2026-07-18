@@ -38,8 +38,17 @@ V_DOT_PROC_ASSUMED: float | None = None
 V_DOT_REG_ASSUMED: float | None = None
 
 # Units of the regeneration air volume-flow channel (ch 120).
-# UNVERIFIED — confirm against sensor datasheet. Options: "m3/h", "m3/s", "L/s"
-V_DOT_REG_UNITS = "m3/h"
+# Options: "m3/h", "m3/s", "L/s".
+# Set to "L/s" based on energy-balance evidence (2026-07 season, Traces 20/21):
+# with "m3/h" the regeneration-coil balance closes at only 0.255
+# (Q_hx_air ≈ 590 W vs Q_hx_water ≈ 2340 W over the 3.2 h window where both
+# sides are measured); with "L/s" (x3.6) it closes at ≈ 0.92 — inside the
+# physically expected 0.8–1.0 band (coil + duct losses). 75 L/s ≈ 270 m³/h is
+# also a plausible regeneration flow, whereas 75 m³/h is not. The factor-4
+# hypothesis (old 500U−200 vs new 125U−50 logger range) closes at only ≈ 0.54
+# and is rejected. STILL VERIFY against the sensor datasheet / logger config
+# on the plant — this is inferred from the balance, not from documentation.
+V_DOT_REG_UNITS = "L/s"
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Thermal storage (Speicher) — for the storage energy balance
