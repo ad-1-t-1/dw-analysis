@@ -6,6 +6,8 @@
   warnings.warn(f"{Path(filepath).name}: duplicate column names after "
 /home/runner/work/dw-analysis/dw-analysis/src/dw_analysis/enrich.py:86: RuntimeWarning: Mean of empty slice
   cp = psychro.water_cp(np.nanmean(
+/home/runner/work/dw-analysis/dw-analysis/src/dw_analysis/enrich.py:188: RuntimeWarning: Mean of empty slice
+  cp_II = psychro.water_cp(np.nanmean(
 
 === Season totals ===
   Q_reg_kWh                        660.1850021923944
@@ -16,9 +18,26 @@
   solar_fraction_note              no auxiliary heat source metered; all regeneration heat traced to solar storage (boundary: regeneration coil)
   solar_collection_share_while_running 0.20580098918601727
   Q_reg_hydronic_kWh               660.1850021923944
-  Q_reg_air_kWh_window             1.2494248347538637
+  Q_reg_air_kWh_window             4.49792940511391
   Q_reg_hydronic_kWh_window        8.82055298933704
   closure_window_hours             3.2
-  closure                          0.1416492635171813
+  closure                          0.5099373486618527
+
+=== Air-to-water HX balance ===
+  Q_hx_water_kWh                   660.1850021923944
+  Q_hx_air_kWh_window              8.100302901268764
+  Q_hx_water_kWh_window            8.82055298933704
+  hx_window_hours                  3.2
+  hx_closure                       0.918344111878363
+
+=== Thermal-storage balance ===
+  Q_store_out_kWh                  660.1850021923944
+  Q_store_out_coverage             0.572
+  Q_store_in_kWh                   11.244788902754287
+  Q_store_in_coverage              0.021
+  T_store_start_C                  41.2
+  T_store_end_C                    68.26
+  dU_store_kWh_per_m3              30.99121927624011
+  dU_store_note                    set config.STORAGE_VOLUME_M3 for absolute ΔU, standby loss and closure
 
 Report: results/SUMMARY.md
