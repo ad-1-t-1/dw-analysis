@@ -91,7 +91,10 @@ def test_solar_fraction_with_aux():
         "Q_aux_W": _series([250.0] * 31),
     })
     sf = kpi.solar_fraction(df, Q_aux_col="Q_aux_W")
-    assert sf["solar_fraction"] == pytest.approx(0.75, rel=1e-9)
+    # Q_reg_W is the SOLAR (hydronic) heat, Q_aux the electric booster:
+    # SF = Q_solar / (Q_solar + Q_aux) = 1000 / 1250
+    assert sf["solar_fraction"] == pytest.approx(0.8, rel=1e-9)
+    assert sf["Q_aux_kWh"] == pytest.approx(0.25 * 1000 / 1000, rel=1e-6)
 
 
 # ── air-to-water HX balance ──────────────────────────────────────────────

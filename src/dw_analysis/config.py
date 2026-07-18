@@ -115,15 +115,27 @@ PLAUSIBILITY = {
 }
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Regeneration temperature — sensor placement (verified 2026-07-06)
+# Regeneration temperature — sensor placement (updated 2026-07-19)
 # ─────────────────────────────────────────────────────────────────────────────
-# desiccant_T_reg_in sits BEFORE the regeneration heating coil (water-air HX)
-# and reads near-ambient. The physically meaningful regeneration inlet
-# temperature is solar_Ana8 "T_reg_nach_HX" (after the HX; TIBT851).
-# Δx_proc correlates r≈0.85 with T_reg_nach_HX vs r≈0.44 with T_reg_in.
-# x_reg_in measured pre-heater remains valid: sensible heating does not
-# change the humidity ratio.
-T_REG_EFFECTIVE_SOURCE = "T_reg_nach_HX"   # never use raw T_reg_in for KPIs
+# Regeneration air path (confirmed by the operator, 2026-07-19):
+#   intake → solar water-air coil → ELECTRIC BOOSTER HEATER → wheel
+# Sensors along that path:
+#   T_reg_in       (ch 102)  BEFORE the coil, near-ambient
+#   T_reg_nach_HX  (TIBT851) after the solar coil, BEFORE the electric heater
+#   T_reg_TICBT103           after the electric heater = WHEEL INLET
+# 2026-06/07 season, wheel running: heater lift TICBT103 − nach_HX has median
+# ≈ 11 K (mean 13.4 K), present 98 % of runtime; solar alone reaches ~41 °C,
+# the wheel sees ~55 °C. Δx_proc correlates r = 0.957 with T_reg_TICBT103 vs
+# 0.56 with T_reg_nach_HX → the wheel responds to the post-heater temperature.
+# x_reg_in measured pre-coil remains valid: sensible heating does not change
+# the humidity ratio.
+T_REG_EFFECTIVE_SOURCE = "T_reg_TICBT103"  # wheel inlet (post-heater)
+T_REG_SOLAR_SOURCE = "T_reg_nach_HX"       # post-coil (pre-heater), solar only
+
+# Air-to-water coil efficiency used ONLY to estimate the electric-heater duty
+# when the regeneration air flow is not measured (see enrich.py). From the
+# measured coil balance over the Trace-20/21 window: hx_closure = 0.918.
+HX_COIL_EFF = 0.918
 
 # Regeneration temperature bins for binned KPIs [°C]
 T_REG_BINS = [30, 35, 40, 45, 50, 55, 60, 65, 70]

@@ -54,15 +54,19 @@ def instantaneous(df: pd.DataFrame) -> pd.DataFrame:
         # undefined when process and regen inlet humidity are nearly equal
         df["epsilon_wheel"] = eps_w.where(denom.abs() > 5e-4)
 
-    if {"Q_latent_W", "Q_reg_W"} <= set(df.columns):
-        df["COP_th"] = (df["Q_latent_W"]
-                        / df["Q_reg_W"].where(df["Q_reg_W"] > 50.0))
-        # Q_reg < 50 W → wheel not being regenerated; COP meaningless
+    # Heat input for COP/SMR: TOTAL regeneration heat (solar hydronic +
+    # electric booster heater) when available — the heater supplies a median
+    # ~11 K of the lift, so hydronic-only denominators overstate COP by
+    # ~30-40 %. Falls back to hydronic-only (and is then labeled by report).
+    q_in = df["Q_reg_total_W"] if "Q_reg_total_W" in df.columns else \
+        df.get("Q_reg_W")
 
-    if {"MRR_gs", "Q_reg_W"} <= set(df.columns):
-        df["SMR_g_per_kJ"] = (df["MRR_gs"]
-                              / (df["Q_reg_W"].where(df["Q_reg_W"] > 50.0)
-                                 / 1000.0))
+    if "Q_latent_W" in df.columns and q_in is not None:
+        df["COP_th"] = df["Q_latent_W"] / q_in.where(q_in > 50.0)
+        # q_in < 50 W → wheel not being regenerated; COP meaningless
+
+    if "MRR_gs" in df.columns and q_in is not None:
+        df["SMR_g_per_kJ"] = df["MRR_gs"] / (q_in.where(q_in > 50.0) / 1000.0)
     return df
 
 
@@ -133,19 +137,21 @@ def period_totals(df: pd.DataFrame) -> dict:
     return out
 
 
-def solar_fraction(df: pd.DataFrame, Q_aux_col: str | None = None) -> dict:
-    """Solar fraction of the regeneration heat.
+def solar_fraction(df: pd.DataFrame, Q_aux_col: str = "Q_aux_W") -> dict:
+    """Solar fraction of the total regeneration heat.
 
-    Definition (system boundary = regeneration heating coil):
-        SF = 1 − Q_aux / Q_reg
-    where Q_aux is heat supplied by any non-solar source within the period.
+    Plant layout (operator-confirmed 2026-07-19): regeneration air is heated
+    by the solar coil (circuit III) and then by an ELECTRIC BOOSTER HEATER
+    to the wheel-inlet setpoint. The booster is not electrically metered
+    (P_el reads zero) but is visible thermally as the lift
+    T_reg_TICBT103 − T_reg_nach_HX (median ≈ 11 K).
 
-    PLANT STATUS: the regeneration coil is fed exclusively from the solar
-    storage via circuit III; no auxiliary heater is metered (P_el covers
-    pumps/controls only). Therefore SF = 1 by construction, and the more
-    informative quantity is the storage/collector utilisation. Both are
-    reported; if an auxiliary source is ever added, pass its power column
-    as `Q_aux_col`.
+        SF = Q_solar / (Q_solar + Q_aux)
+
+    Q_solar = hydronic heat to the coil (circuit III, measured);
+    Q_aux   = booster duty (enrich.py: air-side exact in the flow-metered
+    window, temperature-ratio estimate elsewhere). Both integrated over the
+    SAME timesteps so the ratio is unbiased by differing coverage.
     """
     out: dict = {}
     if "Q_reg_W" not in df.columns:
@@ -153,15 +159,20 @@ def solar_fraction(df: pd.DataFrame, Q_aux_col: str | None = None) -> dict:
     q_reg, _ = integrate_rate(df["Q_reg_W"].clip(lower=0))
     if q_reg <= 0:
         return out
-    if Q_aux_col and Q_aux_col in df.columns:
-        q_aux, _ = integrate_rate(df[Q_aux_col].clip(lower=0))
-        out["solar_fraction"] = 1.0 - q_aux / q_reg
-        out["Q_aux_kWh"] = q_aux / 3.6e6
+    if Q_aux_col in df.columns and df[Q_aux_col].notna().any():
+        both = df["Q_reg_W"].notna() & df[Q_aux_col].notna()
+        q_sol_b, _ = integrate_rate(df.loc[both, "Q_reg_W"].clip(lower=0))
+        q_aux_b, _ = integrate_rate(df.loc[both, Q_aux_col].clip(lower=0))
+        if q_sol_b + q_aux_b > 0:
+            out["solar_fraction"] = q_sol_b / (q_sol_b + q_aux_b)
+        out["Q_aux_kWh"] = q_aux_b / 3.6e6
+        out["Q_solar_kWh"] = q_sol_b / 3.6e6
+        out["solar_fraction_note"] = (
+            "electric booster heater included (thermally inferred — not "
+            "electrically metered); SF over timesteps where both sides known")
     else:
-        out["solar_fraction"] = 1.0
-        out["solar_fraction_note"] = ("no auxiliary heat source metered; all "
-                                      "regeneration heat traced to solar "
-                                      "storage (boundary: regeneration coil)")
+        out["solar_fraction_note"] = ("booster heater duty not computable "
+                                      "(missing T sensors) — SF not reported")
     # share of time solar collection was active while the wheel ran
     if {"solar_active", "Betrieb_Entfeuchter"} <= set(df.columns):
         running = df["Betrieb_Entfeuchter"] > 0.5
@@ -227,26 +238,29 @@ def resampled_summary(df: pd.DataFrame, freq: str = "D") -> pd.DataFrame:
 # Energy-balance closure
 # ─────────────────────────────────────────────────────────────────────────────
 def energy_balance(df: pd.DataFrame) -> dict:
-    """Compare hydronic heat input with regeneration-air enthalpy gain.
+    """Compare TOTAL heat input with the regeneration-air enthalpy gain.
 
-    Closure = Q_reg_air / Q_reg_hydronic  (expected < 1: HX and duct losses;
+    Input  = Q_reg_total (hydronic circuit III + electric booster heater)
+    Output = Q_reg_air   (air enthalpy rise, pre-coil state → wheel inlet)
+    Closure = Q_reg_air / Q_reg_total  (expected 0.9–1.0: duct losses;
     values ≫ 1 or ≪ 0.5 indicate a sensor, unit, or flow-assumption error).
-    Requires the regeneration air flow (ch 120) — reported as
-    'not computable' until that channel is available/converted.
+    Requires the regeneration air flow (ch 120) — closure covers only the
+    window where flow is measured.
     """
     out: dict = {}
+    q_in_col = "Q_reg_total_W" if "Q_reg_total_W" in df.columns else "Q_reg_W"
     if "Q_reg_W" in df.columns:
         q_hyd, _ = integrate_rate(df["Q_reg_W"].clip(lower=0))
         out["Q_reg_hydronic_kWh"] = q_hyd / 3.6e6
-    if "Q_reg_air_W" in df.columns:
+    if "Q_reg_air_W" in df.columns and q_in_col in df.columns:
         # closure is only meaningful over the window where BOTH sides are
         # measured (air-side flow may cover a fraction of the season)
-        both = df["Q_reg_W"].notna() & df["Q_reg_air_W"].notna()
+        both = df[q_in_col].notna() & df["Q_reg_air_W"].notna()
         if both.any():
             q_air, _ = integrate_rate(df.loc[both, "Q_reg_air_W"].clip(lower=0))
-            q_hyd_w, _ = integrate_rate(df.loc[both, "Q_reg_W"].clip(lower=0))
+            q_hyd_w, _ = integrate_rate(df.loc[both, q_in_col].clip(lower=0))
             out["Q_reg_air_kWh_window"] = q_air / 3.6e6
-            out["Q_reg_hydronic_kWh_window"] = q_hyd_w / 3.6e6
+            out["Q_reg_input_kWh_window"] = q_hyd_w / 3.6e6
             out["closure_window_hours"] = round(
                 both.sum() * pd.Timedelta(config.RESAMPLE_RULE
                                           ).total_seconds() / 3600.0, 1)

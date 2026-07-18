@@ -124,15 +124,12 @@ def enrich(df: pd.DataFrame, p_atm: float = config.P_ATM) -> tuple[pd.DataFrame,
         if "Delta_h_proc" in df.columns:
             df["Q_proc_enthalpy_W"] = df["m_dot_da_proc"] * df["Delta_h_proc"]
 
-    # regeneration air enthalpy gain — used for energy-balance closure
-    if ("m_dot_da_reg" in df.columns
-            and {"h_reg_out", "x_reg_in", "Phi_reg_in"} <= set(df.columns)
-            and "T_reg_eff" in df.columns):
-        # wheel-inlet enthalpy at (T_reg_eff, x_reg_in): recompute h from
-        # T_reg_eff and the pre-heater humidity ratio.  h ≈ f(T, x); we get
-        # it via HAPropsSI with 'W' input.
+    # enthalpies along the regeneration air path at constant x_reg_in
+    # (sensible heating in coil and electric heater: x unchanged).
+    def _h_at(T_C: np.ndarray) -> np.ndarray:
+        """h(T, x_reg_in) via HAPropsSI 'W' input, NaN-safe, deduplicated."""
         from CoolProp.HumidAirProp import HAPropsSI
-        T = np.round(df["T_reg_eff"].values, 2)
+        T = np.round(np.asarray(T_C, dtype=float), 2)
         W = np.round(df["x_reg_in"].values, 6)
         h = np.full(len(df), np.nan)
         valid = np.isfinite(T) & np.isfinite(W)
@@ -147,10 +144,28 @@ def enrich(df: pd.DataFrame, p_atm: float = config.P_ATM) -> tuple[pd.DataFrame,
                 except ValueError:
                     vals[i] = np.nan
             h[valid] = vals[inv]
-        df["h_reg_wheel_in"] = h
+        return h
+
+    has_x = {"x_reg_in", "Phi_reg_in"} <= set(df.columns)
+    if has_x and "T_reg_eff" in df.columns:
+        # wheel inlet = after the electric booster heater
+        df["h_reg_wheel_in"] = _h_at(df["T_reg_eff"].values)
+    if has_x and config.T_REG_SOLAR_SOURCE in df.columns:
+        # after the solar coil, before the electric heater
+        df["h_reg_nach_HX"] = _h_at(df[config.T_REG_SOLAR_SOURCE].values)
+
+    # electric booster heater lift [K] (operator-confirmed plant layout:
+    # coil → electric heater → wheel; median ≈ 11 K in 2026-06/07)
+    if {"T_reg_eff", config.T_REG_SOLAR_SOURCE} <= set(df.columns):
+        df["dT_heater"] = df["T_reg_eff"] - df[config.T_REG_SOLAR_SOURCE]
+
+    # total air-side heating of the regeneration stream (coil + electric
+    # heater): pre-coil state → wheel inlet. Compared with the total heat
+    # input (hydronic + booster) in kpi.energy_balance.
+    if ("m_dot_da_reg" in df.columns and "h_reg_wheel_in" in df.columns
+            and "h_reg_in" in df.columns):
         df["Q_reg_air_W"] = df["m_dot_da_reg"] * (df["h_reg_wheel_in"]
-                                                  - df["h_reg_out"]) * -1.0
-        # sign: positive = enthalpy picked up by regen air across heater+wheel
+                                                  - df["h_reg_in"])
 
     # ── solar flags ──────────────────────────────────────────────────────
     if {"Pumpe_I", "T_Kollektor", "T_SP_oben"} <= set(df.columns):
@@ -161,18 +176,55 @@ def enrich(df: pd.DataFrame, p_atm: float = config.P_ATM) -> tuple[pd.DataFrame,
         df["dT_solar_I"] = df["T_I_VL"] - df["T_I_RL"]
 
     # ── air-to-water HX (regeneration heating coil): air-side gain ───────
-    # The coil heats the regeneration air from T_reg_in (pre-heater state)
-    # to T_reg_eff (= T_reg_nach_HX) at CONSTANT humidity ratio (sensible
-    # heating, no condensation), so the air-side heat picked up in the coil
-    # is  Q̇_hx,air = ṁ_da,reg · [h(T_reg_eff, x_reg_in) − h(T_reg_in, x_reg_in)].
-    #   h_reg_wheel_in = h(T_reg_eff, x_reg_in)  (built above)
-    #   h_reg_in       = h(T_reg_in,  Φ_reg_in)  (built in the STREAMS loop;
-    #                    same humidity ratio x_reg_in)
-    # Water side of the same HX is Q_reg_W (circuit III). kpi.hx_energy_balance
-    # compares the two.
-    if {"m_dot_da_reg", "h_reg_wheel_in", "h_reg_in"} <= set(df.columns):
-        df["Q_hx_air_W"] = df["m_dot_da_reg"] * (df["h_reg_wheel_in"]
+    # The coil heats the regeneration air from T_reg_in (pre-coil state) to
+    # T_reg_nach_HX at CONSTANT humidity ratio (sensible heating), so the
+    # coil-only air-side gain is
+    #   Q̇_hx,air = ṁ_da,reg · [h(T_nach_HX, x_reg_in) − h(T_reg_in, x_reg_in)].
+    # NOTE: uses h_reg_nach_HX, NOT h_reg_wheel_in — the electric booster
+    # heater sits between TIBT851 and the wheel and must not be attributed
+    # to the coil. Water side of the same HX is Q_reg_W (circuit III);
+    # kpi.hx_energy_balance compares the two.
+    if {"m_dot_da_reg", "h_reg_nach_HX", "h_reg_in"} <= set(df.columns):
+        df["Q_hx_air_W"] = df["m_dot_da_reg"] * (df["h_reg_nach_HX"]
                                                  - df["h_reg_in"])
+
+    # ── electric booster heater duty Q̇_aux ──────────────────────────────
+    # Exact (air side) where the regen flow is measured:
+    #   Q̇_aux = ṁ_da,reg · [h(T_wheel_in, x) − h(T_nach_HX, x)]
+    # Estimate where flow is missing (most of the season): same air stream
+    # crosses coil and heater, so the ṁ·c̄p factor cancels in the ratio
+    #   Q̇_aux/Q̇_coil,air = ΔT_heater/ΔT_coil, and Q̇_coil,air ≈ HX_COIL_EFF ·
+    #   Q̇_reg,hydronic (measured coil closure 0.918) →
+    #   Q̇_aux ≈ HX_COIL_EFF · Q̇_reg_W · ΔT_heater/ΔT_coil.
+    # ΔT_coil = T_nach_HX − T_reg_in; falls back to ambient T_AU when the
+    # pre-coil sensor is masked (intake is ambient air).
+    if {"m_dot_da_reg", "h_reg_wheel_in", "h_reg_nach_HX"} <= set(df.columns):
+        df["Q_aux_air_W"] = (df["m_dot_da_reg"]
+                             * (df["h_reg_wheel_in"] - df["h_reg_nach_HX"])
+                             ).clip(lower=0)
+    if {"dT_heater", "Q_reg_W", config.T_REG_SOLAR_SOURCE} <= set(df.columns):
+        T_pre = df.get("T_reg_in")
+        if T_pre is None and "T_AU" in df.columns:
+            T_pre = df["T_AU"]
+        elif T_pre is not None and "T_AU" in df.columns:
+            T_pre = T_pre.fillna(df["T_AU"])
+        if T_pre is not None:
+            dT_coil = (df[config.T_REG_SOLAR_SOURCE] - T_pre).where(
+                lambda s: s > 2.0)  # ratio unstable for tiny coil lift
+            df["Q_aux_est_W"] = (config.HX_COIL_EFF * df["Q_reg_W"].clip(lower=0)
+                                 * (df["dT_heater"].clip(lower=0) / dT_coil))
+    # best available heater duty: exact where measured, estimate elsewhere
+    if "Q_aux_air_W" in df.columns or "Q_aux_est_W" in df.columns:
+        df["Q_aux_W"] = df.get("Q_aux_air_W", pd.Series(np.nan, df.index))
+        if "Q_aux_est_W" in df.columns:
+            df["Q_aux_W"] = df["Q_aux_W"].fillna(df["Q_aux_est_W"])
+        meta["Q_aux_source"] = ("air-side exact where regen flow measured; "
+                                "temperature-ratio estimate elsewhere "
+                                "(see enrich.py)")
+    # total regeneration heat input (solar hydronic + electric booster)
+    if {"Q_reg_W", "Q_aux_W"} <= set(df.columns):
+        df["Q_reg_total_W"] = (df["Q_reg_W"].clip(lower=0)
+                               + df["Q_aux_W"].clip(lower=0))
 
     # ── thermal storage: charge / discharge / bulk temperature ──────────
     # Discharge to the regeneration coil is circuit III → equals Q_reg_W.
