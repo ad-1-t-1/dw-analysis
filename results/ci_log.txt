@@ -4,42 +4,44 @@
   warnings.warn(f"{Path(filepath).name}: duplicate column names after "
 /home/runner/work/dw-analysis/dw-analysis/src/dw_analysis/ingest.py:126: UserWarning: E2026-06-01_2026-07-02.csv: duplicate column names after cleaning ['PWM Pumpe_I'] — keeping first occurrence.
   warnings.warn(f"{Path(filepath).name}: duplicate column names after "
+/home/runner/work/dw-analysis/dw-analysis/src/dw_analysis/ingest.py:126: UserWarning: E2026-06-01_2026-07-15.csv: duplicate column names after cleaning ['PWM Pumpe_I'] — keeping first occurrence.
+  warnings.warn(f"{Path(filepath).name}: duplicate column names after "
 /home/runner/work/dw-analysis/dw-analysis/src/dw_analysis/enrich.py:86: RuntimeWarning: Mean of empty slice
   cp = psychro.water_cp(np.nanmean(
 /home/runner/work/dw-analysis/dw-analysis/src/dw_analysis/enrich.py:240: RuntimeWarning: Mean of empty slice
   cp_II = psychro.water_cp(np.nanmean(
 
 === Season totals ===
-  Q_reg_kWh                        660.1850021923944
-  Q_reg_coverage                   0.5717150197380788
-  Q_reg_net_kWh                    660.182436282154
+  Q_reg_kWh                        706.9722020802884
+  Q_reg_coverage                   0.3759467068480114
+  Q_reg_net_kWh                    706.9696361700479
   E_el_kWh                         0.0
-  solar_fraction                   0.6052743915826629
-  Q_aux_kWh                        415.9999085725779
-  Q_solar_kWh                      637.8965189750057
+  solar_fraction                   0.6149259664593176
+  Q_aux_kWh                        428.7571768033547
+  Q_solar_kWh                      684.6837188628997
   solar_fraction_note              electric booster heater included (thermally inferred — not electrically metered); SF over timesteps where both sides known
-  solar_collection_share_while_running 0.20580098918601727
-  Q_reg_hydronic_kWh               660.1850021923944
-  Q_reg_air_kWh_window             17.793627459411184
-  Q_reg_input_kWh_window           18.51711590926236
-  closure_window_hours             3.2
-  closure                          0.9609286644099213
+  solar_collection_share_while_running 0.2034752619710837
+  Q_reg_hydronic_kWh               706.9722020802884
+  Q_reg_air_kWh_window             71.18166072909996
+  Q_reg_input_kWh_window           76.55704829556068
+  closure_window_hours             14.7
+  closure                          0.9297858566110311
 
 === Air-to-water HX balance ===
-  Q_hx_water_kWh                   660.1850021923944
-  Q_hx_air_kWh_window              8.100302901268764
-  Q_hx_water_kWh_window            8.82055298933704
-  hx_window_hours                  3.2
-  hx_closure                       0.918344111878363
+  Q_hx_water_kWh                   706.9722020802884
+  Q_hx_air_kWh_window              49.788204267325916
+  Q_hx_water_kWh_window            54.55190676155116
+  hx_window_hours                  14.7
+  hx_closure                       0.9126757839089364
 
 === Thermal-storage balance ===
-  Q_store_out_kWh                  660.1850021923944
-  Q_store_out_coverage             0.572
-  Q_store_in_kWh                   11.244788902754287
-  Q_store_in_coverage              0.021
+  Q_store_out_kWh                  706.9722020802884
+  Q_store_out_coverage             0.376
+  Q_store_in_kWh                   40.610646009280046
+  Q_store_in_coverage              0.069
   T_store_start_C                  41.2
-  T_store_end_C                    68.26
-  dU_store_kWh_per_m3              30.99121927624011
+  T_store_end_C                    70.09
+  dU_store_kWh_per_m3              33.073880816971396
   dU_store_note                    set config.STORAGE_VOLUME_M3 for absolute ΔU, standby loss and closure
 
 Report: results/SUMMARY.md

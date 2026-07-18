@@ -1,19 +1,19 @@
-# Solar-assisted desiccant wheel — season summary (2026-06-10 → 2026-07-02)
+# Solar-assisted desiccant wheel — season summary (2026-06-10 → 2026-07-15)
 
-_Run: 2026-07-18 20:13 UTC · code+data revision `b4539b53b`. Every pipeline run rewrites this stamp, so a fresh commit here proves the analysis actually ran on your upload._
+_Run: 2026-07-18 20:25 UTC · code+data revision `fea63189b`. Every pipeline run rewrites this stamp, so a fresh commit here proves the analysis actually ran on your upload._
 
 ## Data quality
 
 | Quantity | Value |
 |---|---|
-| rows | 15960 |
+| rows | 25220 |
 | start | 2026-06-10 11:20:00+02:00 |
-| end | 2026-07-02 15:18:00+02:00 |
+| end | 2026-07-15 11:58:00+02:00 |
 | artefact_rows_masked | 16411 |
-| plausibility_flags | 15668 |
-| coverage_T_proc_in | 0.605 |
-| coverage_T_reg_nach_HX | 0.946 |
-| coverage_V_dot_III | 0.569 |
+| plausibility_flags | 17580 |
+| coverage_T_proc_in | 0.437 |
+| coverage_T_reg_nach_HX | 0.966 |
+| coverage_V_dot_III | 0.374 |
 
 ## Measured-period totals
 
@@ -21,9 +21,9 @@ _Run: 2026-07-18 20:13 UTC · code+data revision `b4539b53b`. Every pipeline run
 
 | Quantity | Value |
 |---|---|
-| Q_reg_kWh | 660.185 |
-| Q_reg_coverage | 0.572 |
-| Q_reg_net_kWh | 660.182 |
+| Q_reg_kWh | 706.972 |
+| Q_reg_coverage | 0.376 |
+| Q_reg_net_kWh | 706.970 |
 | E_el_kWh | 0.000 |
 
 _Air-flow sources: process = None, regeneration = measured (L/s assumed)._
@@ -32,21 +32,21 @@ _Air-flow sources: process = None, regeneration = measured (L/s assumed)._
 
 | Quantity | Value |
 |---|---|
-| solar_fraction | 0.605 |
-| Q_aux_kWh | 416.000 |
-| Q_solar_kWh | 637.897 |
+| solar_fraction | 0.615 |
+| Q_aux_kWh | 428.757 |
+| Q_solar_kWh | 684.684 |
 | solar_fraction_note | electric booster heater included (thermally inferred — not electrically metered); SF over timesteps where both sides known |
-| solar_collection_share_while_running | 0.206 |
+| solar_collection_share_while_running | 0.203 |
 
 ## Energy-balance closure
 
 | Quantity | Value |
 |---|---|
-| Q_reg_hydronic_kWh | 660.185 |
-| Q_reg_air_kWh_window | 17.794 |
-| Q_reg_input_kWh_window | 18.517 |
-| closure_window_hours | 3.200 |
-| closure | 0.961 |
+| Q_reg_hydronic_kWh | 706.972 |
+| Q_reg_air_kWh_window | 71.182 |
+| Q_reg_input_kWh_window | 76.557 |
+| closure_window_hours | 14.700 |
+| closure | 0.930 |
 
 ## Air-to-water HX balance (regeneration coil)
 
@@ -54,11 +54,11 @@ Boundary = regeneration heating coil. Water side (`Q_hx_water` = circuit-III hea
 
 | Quantity | Value |
 |---|---|
-| Q_hx_water_kWh | 660.185 |
-| Q_hx_air_kWh_window | 8.100 |
-| Q_hx_water_kWh_window | 8.821 |
-| hx_window_hours | 3.200 |
-| hx_closure | 0.918 |
+| Q_hx_water_kWh | 706.972 |
+| Q_hx_air_kWh_window | 49.788 |
+| Q_hx_water_kWh_window | 54.552 |
+| hx_window_hours | 14.700 |
+| hx_closure | 0.913 |
 
 ## Thermal-storage balance (energy in vs out + ΔU)
 
@@ -66,27 +66,27 @@ Boundary = stratified store. Charge (`Q_store_in`, circuit II) vs discharge (`Q_
 
 | Quantity | Value |
 |---|---|
-| Q_store_out_kWh | 660.185 |
-| Q_store_out_coverage | 0.572 |
-| Q_store_in_kWh | 11.245 |
-| Q_store_in_coverage | 0.021 |
+| Q_store_out_kWh | 706.972 |
+| Q_store_out_coverage | 0.376 |
+| Q_store_in_kWh | 40.611 |
+| Q_store_in_coverage | 0.069 |
 | T_store_start_C | 41.200 |
-| T_store_end_C | 68.260 |
-| dU_store_kWh_per_m3 | 30.991 |
+| T_store_end_C | 70.090 |
+| dU_store_kWh_per_m3 | 33.074 |
 | dU_store_note | set config.STORAGE_VOLUME_M3 for absolute ΔU, standby loss and closure |
 
 ## KPIs by regeneration temperature bin
 
 | T_reg_bin   |   hours |   Delta_x_mean_gkg |   eta_deh_mean |   Q_reg_kWh |   Q_reg_coverage |   Q_reg_net_kWh |   E_el_kWh |
 |:------------|--------:|-------------------:|---------------:|------------:|-----------------:|----------------:|-----------:|
-| (30, 35]    |  21.100 |              0.255 |          0.040 |      23.171 |            0.028 |          23.171 |      0.000 |
-| (35, 40]    |  17.100 |              0.474 |          0.077 |       9.392 |            0.011 |           9.392 |      0.000 |
-| (40, 45]    |  25.067 |              0.677 |          0.111 |      25.457 |            0.023 |          25.457 |      0.000 |
-| (45, 50]    |  42.833 |              0.853 |          0.141 |      71.551 |            0.063 |          71.551 |      0.000 |
-| (50, 55]    |  56.867 |              1.065 |          0.177 |     107.783 |            0.093 |         107.783 |      0.000 |
-| (55, 60]    |  66.033 |              1.296 |          0.215 |     129.031 |            0.109 |         129.031 |      0.000 |
-| (60, 65]    |  46.833 |              1.522 |          0.252 |      87.372 |            0.074 |          87.372 |      0.000 |
-| (65, 70]    |  30.033 |              1.780 |          0.294 |      48.373 |            0.041 |          48.373 |      0.000 |
+| (30, 35]    |  25.300 |              0.307 |          0.049 |      23.171 |            0.018 |          23.171 |      0.000 |
+| (35, 40]    |  21.100 |              0.524 |          0.085 |       9.392 |            0.007 |           9.392 |      0.000 |
+| (40, 45]    |  28.800 |              0.708 |          0.115 |      25.457 |            0.014 |          25.457 |      0.000 |
+| (45, 50]    |  51.033 |              0.876 |          0.144 |      75.906 |            0.040 |          75.906 |      0.000 |
+| (50, 55]    |  65.700 |              1.087 |          0.179 |     111.732 |            0.059 |         111.732 |      0.000 |
+| (55, 60]    |  74.233 |              1.322 |          0.218 |     133.508 |            0.069 |         133.508 |      0.000 |
+| (60, 65]    |  55.200 |              1.560 |          0.257 |      91.722 |            0.047 |          91.722 |      0.000 |
+| (65, 70]    |  40.267 |              1.856 |          0.302 |      53.907 |            0.027 |          53.907 |      0.000 |
 
 ## Daily summary
 
@@ -113,8 +113,21 @@ Boundary = stratified store. Charge (`Q_store_in`, circuit II) vs discharge (`Q_
 | 2026-06-28 00:00:00+02:00 |      46.466 |            0.917 |          46.466 |          0 |           26.85  |             26.77  |           62.352 |                   1.519 |      30.095 |           67.69  |      24     |            0.593 |      31.836 |        46.466 | electric booster heater included (thermally inferred — not electrically metered); SF over timesteps where both sides known |                                  0.318 |
 | 2026-06-29 00:00:00+02:00 |      32.682 |            0.68  |          32.682 |          0 |           25.884 |             28.484 |           57.81  |                   1.444 |      24.485 |           60.786 |      24     |            0.547 |      27.064 |        32.682 | electric booster heater included (thermally inferred — not electrically metered); SF over timesteps where both sides known |                                  0.097 |
 | 2026-06-30 00:00:00+02:00 |       0     |            0     |           0     |          0 |          nan     |            nan     |           50.743 |                 nan     |      23.738 |           51.226 |      24     |          nan     |     nan     |       nan     | nan                                                                                                                        |                                nan     |
-| 2026-07-01 00:00:00+02:00 |       6.891 |            0.118 |           6.891 |          0 |           23.743 |             32.405 |           49.394 |                   1.963 |      21.633 |           50.58  |      21     |            0.489 |       7.203 |         6.891 | electric booster heater included (thermally inferred — not electrically metered); SF over timesteps where both sides known |                                  0.3   |
-| 2026-07-02 00:00:00+02:00 |       6.727 |            0.198 |           6.727 |          0 |           22.814 |             33.855 |           34.179 |                   0.827 |      21.321 |           57.601 |       3.433 |            0.448 |       8.273 |         6.727 | electric booster heater included (thermally inferred — not electrically metered); SF over timesteps where both sides known |                                  0.301 |
+| 2026-07-01 00:00:00+02:00 |       6.891 |            0.118 |           6.891 |          0 |           23.743 |             32.405 |           49.394 |                   1.963 |      21.633 |           50.58  |      21     |            0.488 |       7.217 |         6.891 | electric booster heater included (thermally inferred — not electrically metered); SF over timesteps where both sides known |                                  0.3   |
+| 2026-07-02 00:00:00+02:00 |       6.727 |            0.127 |           6.727 |          0 |           22.814 |             33.855 |           38.423 |                   0.827 |      21.333 |           60.77  |       7.567 |            0.448 |       8.288 |         6.727 | electric booster heater included (thermally inferred — not electrically metered); SF over timesteps where both sides known |                                  0.145 |
+| 2026-07-03 00:00:00+02:00 |       0     |            0     |           0     |          0 |          nan     |            nan     |           38.324 |                 nan     |      19.254 |           60.484 |       8.267 |          nan     |     nan     |       nan     | nan                                                                                                                        |                                nan     |
+| 2026-07-04 00:00:00+02:00 |       0     |            0     |           0     |          0 |          nan     |            nan     |           36.295 |                 nan     |      20.257 |           61.496 |       7.7   |          nan     |     nan     |       nan     | nan                                                                                                                        |                                nan     |
+| 2026-07-05 00:00:00+02:00 |       0     |            0     |           0     |          0 |          nan     |            nan     |           41.365 |                 nan     |      20.134 |           55.708 |      10.667 |          nan     |     nan     |       nan     | nan                                                                                                                        |                                nan     |
+| 2026-07-06 00:00:00+02:00 |       0     |            0     |           0     |          0 |          nan     |            nan     |           35.896 |                 nan     |      20.392 |           46.373 |      10.267 |          nan     |     nan     |       nan     | nan                                                                                                                        |                                nan     |
+| 2026-07-07 00:00:00+02:00 |       0     |            0     |           0     |          0 |          nan     |            nan     |           32.878 |                 nan     |      22.334 |           48.691 |       6.733 |          nan     |     nan     |       nan     | nan                                                                                                                        |                                nan     |
+| 2026-07-08 00:00:00+02:00 |       0     |            0     |           0     |          0 |          nan     |            nan     |           34.262 |                 nan     |      20.12  |           52.427 |       7.167 |          nan     |     nan     |       nan     | nan                                                                                                                        |                                nan     |
+| 2026-07-09 00:00:00+02:00 |       0     |            0     |           0     |          0 |          nan     |            nan     |           31.805 |                 nan     |      19.649 |           52.071 |       7.9   |          nan     |     nan     |       nan     | nan                                                                                                                        |                                nan     |
+| 2026-07-10 00:00:00+02:00 |       0     |            0     |           0     |          0 |          nan     |            nan     |           32.571 |                 nan     |      20.037 |           53.297 |       7.333 |          nan     |     nan     |       nan     | nan                                                                                                                        |                                nan     |
+| 2026-07-11 00:00:00+02:00 |       0     |            0     |           0     |          0 |          nan     |            nan     |           30.229 |                 nan     |      22.832 |           68.237 |       5.4   |          nan     |     nan     |       nan     | nan                                                                                                                        |                                nan     |
+| 2026-07-12 00:00:00+02:00 |       0     |            0     |           0     |          0 |          nan     |            nan     |           34.43  |                 nan     |      24.283 |           77.113 |       8.1   |          nan     |     nan     |       nan     | nan                                                                                                                        |                                nan     |
+| 2026-07-13 00:00:00+02:00 |       7.587 |            0.083 |           7.587 |          0 |           24.647 |             33.958 |           34.366 |                   1.022 |      25.398 |           78.774 |       8.1   |            0.92  |       0.658 |         7.587 | electric booster heater included (thermally inferred — not electrically metered); SF over timesteps where both sides known |                                  0.35  |
+| 2026-07-14 00:00:00+02:00 |      28.68  |            0.307 |          28.68  |          0 |           24.072 |             35.078 |           39.115 |                   1.082 |      23     |           77.18  |       9.167 |            0.734 |      10.389 |        28.68  | electric booster heater included (thermally inferred — not electrically metered); SF over timesteps where both sides known |                                  0.298 |
+| 2026-07-15 00:00:00+02:00 |      10.521 |            0.212 |          10.521 |          0 |           23.412 |             36.813 |           35.116 |                   0.609 |      20.996 |           73.507 |       4.033 |            0.862 |       1.683 |        10.521 | electric booster heater included (thermally inferred — not electrically metered); SF over timesteps where both sides known |                                  0.314 |
 
 ## Figures
 
