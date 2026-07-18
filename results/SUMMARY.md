@@ -1,6 +1,6 @@
 # Solar-assisted desiccant wheel — season summary (2026-06-10 → 2026-07-02)
 
-_Run: 2026-07-18 20:06 UTC · code+data revision `local`. Every pipeline run rewrites this stamp, so a fresh commit here proves the analysis actually ran on your upload._
+_Run: 2026-07-18 20:13 UTC · code+data revision `b4539b53b`. Every pipeline run rewrites this stamp, so a fresh commit here proves the analysis actually ran on your upload._
 
 ## Data quality
 
